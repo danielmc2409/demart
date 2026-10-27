@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function getCartDetails(ids: string[]) {
   const variantes = await prisma.variant.findMany({
-    where: { id: { in: ids.slice(0, 30) } },
+   where: { id: { in: ids.slice(0, 30) }, product: { ativo: true } },
     include: { product: true },
   });
 
