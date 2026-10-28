@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Nome da Loja", template: "%s | Nome da Loja" },
+  title: { default: "DM", template: "%s | DM" },
   description: "Roupas com atendimento pelo WhatsApp",
-  openGraph: { type: "website", locale: "pt_BR", siteName: "Nome da Loja" },
+  openGraph: { type: "website", locale: "pt_BR", siteName: "DM" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,10 +30,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
 
       <body className="min-h-full flex flex-col">
+          <header className="head">
+            <img src="/img/demart.png" alt="Demart" className="logo" />
+            <Link href="/carrinho">
+  <img src="/img/carrinho.png" alt="Carrinho" className="icone-carrinho" />
+</Link>
+            
+          </header>
+
+        {children}
 
 
 
-<a
+       <footer className="pe">
+  © {new Date().getFullYear()} Demart
+
+  <a
   href={`https://wa.me/${process.env.WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Tenho uma dúvida.")}`}
   target="_blank"
   rel="noopener noreferrer"
@@ -41,20 +53,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 >
   WhatsApp
 </a>
-
-        <header className="flex items-center justify-between border-b px-4 py-3">
-          <Link href="/produtos" className="font-semibold">
-            Minha Loja
-          </Link>
-          <Link href="/carrinho">Carrinho</Link>
-        </header>
-
-        {children}
-
-
-
-       <footer className="mt-auto border-t px-4 py-6 text-center text-sm text-neutral-600">
-  © {new Date().getFullYear()} Nome da Loja
 </footer>
 
 

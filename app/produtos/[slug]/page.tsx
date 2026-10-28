@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
 import AddToCart from "./add-to-cart";
+import Link from "next/link";
+
 
 export const dynamic = "force-dynamic";
 
@@ -19,34 +21,49 @@ export default async function Produto({
   });
 
   if (!produto || !produto.ativo) notFound();
+  
+const whats = `https://wa.me/${process.env.WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  `Olá! Tenho uma dúvida sobre: ${produto.nome}`
+)}`;
+return (
+  <main className="produto-pagina">
+    <div className="produto-pagina-img">
+      {produto.imagens[0] && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={produto.imagens[0]} alt={produto.nome} />
+      )}
+    </div>
 
-  return (
-    <main className="mx-auto grid max-w-4xl gap-8 px-4 py-10 md:grid-cols-2">
-      <div className="aspect-[3/4] rounded bg-neutral-200">
-        {produto.imagens[0] && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={produto.imagens[0]}
-            alt={produto.nome}
-            className="h-full w-full rounded object-cover"
-          />
-        )}
-      </div>
+    <div className="produto-pagina-info">
+  <h1 className="produto-pagina-nome">{produto.nome}</h1>
+  <p className="produto-pagina-preco">{brl(produto.precoCentavos)}</p>
+  {produto.descricao && (
+    <p className="produto-pagina-desc">{produto.descricao}</p>
+  )}
 
-      <div>
-        <h1 className="text-2xl font-semibold">{produto.nome}</h1>
-        <p className="mt-2 text-xl">{brl(produto.precoCentavos)}</p>
-        {produto.descricao && <p className="mt-4">{produto.descricao}</p>}
+  <div className="produto-pagina-acoes">
+  <AddToCart
+    precoCentavos={produto.precoCentavos}
+    variantes={produto.variantes.map((v) => ({
+      id: v.id,
+      tamanho: v.tamanho,
+      cor: v.cor,
+      estoque: v.estoque,
+    }))}
+  />
 
-        <AddToCart
-          variantes={produto.variantes.map((v) => ({
-            id: v.id,
-            tamanho: v.tamanho,
-            cor: v.cor,
-            estoque: v.estoque,
-          }))}
-        />
-      </div>
-    </main>
-  );
+  <Link href="/" className="botao-voltar">
+    Voltar para a loja
+  </Link>
+
+  <div className="duvida">
+    <p>Ficou com alguma dúvida?</p>
+    <a href={whats} target="_blank" rel="noopener noreferrer" className="botao-vendedor">
+      Falar com o vendedor
+    </a>
+  </div>
+</div>
+</div>
+  </main>
+);
 }

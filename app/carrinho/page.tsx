@@ -60,79 +60,77 @@ export default function Carrinho() {
     useCart.getState().clear();
     window.location.href = res.url;
   }
+if (carregando) return <p className="carrinho-msg">Carregando...</p>;
 
-  if (carregando) return <p className="p-10">Carregando...</p>;
-
-  if (linhas.length === 0) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <h1 className="mb-4 text-2xl font-semibold">Carrinho</h1>
-        <p>Seu carrinho está vazio.</p>
-        <Link href="/produtos" className="mt-4 inline-block underline">
-          Ver produtos
-        </Link>
-      </main>
-    );
-  }
-
+if (linhas.length === 0) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-semibold">Carrinho</h1>
+    <main className="carrinho">
+      <h1 className="carrinho-titulo">Carrinho</h1>
+      <p>Seu carrinho está vazio.</p>
+      <Link href="/" className="botao-voltar carrinho-voltar">
+        Voltar para a loja
+      </Link>
+    </main>
+  );
+}
 
-      <ul className="divide-y">
-        {linhas.map(({ item, d }) => (
-          <li key={d.id} className="flex items-center justify-between py-4">
-            <div>
-              <p className="font-medium">{d.nome}</p>
-              <p className="text-sm text-neutral-600">
-                {d.tamanho} · {d.cor} · {brl(d.precoCentavos)}
-              </p>
-              {d.estoque < item.qtd && (
-                <p className="text-sm text-red-600">
-                  Só temos {d.estoque} em estoque
-                </p>
-              )}
-            </div>
+return (
+  <main className="carrinho">
+    <h1 className="carrinho-titulo">Carrinho</h1>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setQtd(d.id, item.qtd - 1)}
-                className="h-8 w-8 rounded border"
-              >
-                −
-              </button>
-              <span className="w-6 text-center">{item.qtd}</span>
-              <button
-                onClick={() => setQtd(d.id, item.qtd + 1)}
-                className="h-8 w-8 rounded border"
-              >
-                +
-              </button>
-            </div>
-          </li>
+    <ul className="carrinho-lista">
+      {linhas.map(({ item, d }) => (
+        <li key={d.id} className="carrinho-item">
+          <div className="carrinho-info">
+            <p className="carrinho-nome">{d.nome}</p>
+            <p className="carrinho-detalhe">
+              {d.tamanho} · {d.cor} · {brl(d.precoCentavos)}
+            </p>
+            {d.estoque < item.qtd && (
+              <p className="carrinho-erro">Só temos {d.estoque} em estoque</p>
+            )}
+          </div>
+
+          <div className="carrinho-qtd">
+            <button
+              type="button"
+              onClick={() => setQtd(d.id, item.qtd - 1)}
+              className="qtd-btn"
+            >
+              −
+            </button>
+            <span className="qtd-num">{item.qtd}</span>
+            <button
+              type="button"
+              onClick={() => setQtd(d.id, item.qtd + 1)}
+              className="qtd-btn"
+            >
+              +
+            </button>
+          </div>
+       </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-right text-xl font-semibold">
-        Total: {brl(total)}
-      </p>
+      <p className="carrinho-total">Total: {brl(total)}</p>
 
-      <label className="mt-6 block text-sm font-medium">
+      <label className="carrinho-label">
         Seu nome
         <input
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          className="mt-1 w-full rounded border px-3 py-2"
+          className="carrinho-input"
           placeholder="Maria Silva"
         />
       </label>
 
-      {erro && <p className="mt-3 text-sm text-red-600">{erro}</p>}
+      {erro && <p className="carrinho-erro">{erro}</p>}
 
       <button
+        type="button"
         onClick={finalizar}
         disabled={enviando || nome.trim().length < 2}
-        className="mt-6 w-full rounded bg-green-600 py-3 text-white disabled:opacity-40"
+        className="carrinho-finalizar"
       >
         {enviando ? "Enviando..." : "Finalizar pelo WhatsApp"}
       </button>
