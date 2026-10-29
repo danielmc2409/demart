@@ -778,4 +778,4 @@ body {
   background: #d1d5db;
   cursor: pointer;
 }
-.galeria-bolinha.ativa { background: #111; transform: scale(1.25); }
+.galeria-bolinha.ativa { background: #111111; transform: scale(1.25); }
