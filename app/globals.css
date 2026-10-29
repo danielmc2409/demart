@@ -45,16 +45,7 @@ main {
   font-size: 0.875rem;
 }
 
-.pe {
-  width: 100%;
-  padding: 1.5rem 1rem;
-  background-color: #e2dfdf;
-  border-top: 1px solid #243d6f;
-  color: #525252;
-  text-align: center;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
+
 
 
 .secao{
@@ -779,3 +770,35 @@ body {
   cursor: pointer;
 }
 .galeria-bolinha.ativa { background: #111111; transform: scale(1.25); }
+.pe {
+  width: 100%;
+  padding: 2rem 1rem 5rem; /* espaço embaixo para o botão flutuante não cobrir o texto */
+  background-color: #e2dfdf;
+  border-top: 1px solid #243d6f;
+  color: #525252;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.4rem;
+}
+.pe-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem 4rem;
+  margin-bottom: 1.5rem;
+}
+.pe-titulo { font-weight: 600; color: #171717; margin-bottom: 0.25rem; }
+.pe-insta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #171717;
+  text-decoration: underline;
+}
+.pe-link { display: block; color: #171717; text-decoration: underline; }
+.pe-legal {
+  padding-top: 1rem;
+  border-top: 1px solid #c9c5c5;
+  font-size: 0.8rem;
+  color: #6b6b6b;
+}
