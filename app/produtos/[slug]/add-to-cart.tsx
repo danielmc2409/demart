@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { brl } from "@/lib/format";
 
@@ -27,6 +28,7 @@ export default function AddToCart({
   precoCentavos: number;
 }) {
   const add = useCart((s) => s.add);
+  const router = useRouter();
 
   // só variantes com estoque, com texto normalizado
   const disponiveis = variantes
@@ -65,18 +67,30 @@ export default function AddToCart({
     setQtd(1);
   }
 
-  function adicionar() {
-    if (!variante) return;
+  function colocarNoCarrinho() {
+    if (!variante) return false;
     for (let i = 0; i < qtd; i++) add(variante.id);
+    return true;
+  }
+
+  function adicionar() {
+    if (!colocarNoCarrinho()) return;
     setQtd(1);
     setOk(true);
     setTimeout(() => setOk(false), 1500);
   }
 
+  function comprarAgora() {
+    if (!colocarNoCarrinho()) return;
+    router.push("/carrinho");
+  }
+
   if (disponiveis.length === 0) {
     return (
       <div className="comprar">
-        <p className="aviso-max">Produto esgotado no momento.</p>
+        <button type="button" disabled className="botao-carrinho botao-esgotado">
+          Esgotado
+        </button>
       </div>
     );
   }
@@ -160,15 +174,20 @@ export default function AddToCart({
 
       <button
         type="button"
+        onClick={comprarAgora}
+        disabled={!variante}
+        className="botao-comprar-agora"
+      >
+        {variante ? "Comprar agora" : "Escolha o tamanho"}
+      </button>
+
+      <button
+        type="button"
         onClick={adicionar}
         disabled={!variante}
         className="botao-carrinho"
       >
-        {ok
-          ? "Adicionado ✓"
-          : variante
-          ? "Adicionar ao carrinho"
-          : "Escolha o tamanho"}
+        {ok ? "Adicionado ✓" : "Adicionar ao carrinho"}
       </button>
     </div>
   );

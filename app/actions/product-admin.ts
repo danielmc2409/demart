@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { slugify, parsePreco } from "@/lib/slug";
 
+const LINHAS = /\r?\n/;
+
 const baseSchema = z.object({
   nome: z.string().trim().min(2, "Nome muito curto").max(120),
   descricao: z.string().trim().max(2000).optional(),
@@ -25,7 +27,7 @@ function lerBase(fd: FormData) {
     return { erro: "Preço inválido" };
 
   const imagens = (p.data.imagens ?? "")
-    .split("\n")
+    .split(LINHAS)
     .map((s) => s.trim())
     .filter(Boolean);
   if (imagens.some((u) => !/^https?:\/\//.test(u)))
@@ -45,7 +47,7 @@ function lerBase(fd: FormData) {
 // linhas no formato: tamanho,cor,estoque  (ex.: M,Preto,5)
 function lerVariantes(texto: string) {
   const out: { tamanho: string; cor: string; estoque: number }[] = [];
-  for (const linha of texto.split("\n").map((l) => l.trim()).filter(Boolean)) {
+  for (const linha of texto.split(LINHAS).map((l) => l.trim()).filter(Boolean)) {
     const [tamanho, cor, est] = linha.split(",").map((s) => s.trim());
     const estoque = Number(est);
     if (!tamanho || !cor || !Number.isInteger(estoque) || estoque < 0) return null;
@@ -82,7 +84,6 @@ export async function createProduct(fd: FormData) {
   revalidatePath("/produtos");
   redirect(`/admin/produtos/${criado.id}`);
 }
-
 export async function updateProduct(fd: FormData) {
   await requireAdmin();
   const id = String(fd.get("id"));
@@ -134,3 +135,4 @@ export async function addVariant(fd: FormData) {
   });
   revalidatePath(`/admin/produtos/${productId}`);
 }
+// updateProduct, toggleAtivo, setEstoque e addVariant: sem alterações

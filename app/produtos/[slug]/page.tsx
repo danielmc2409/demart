@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
 import AddToCart from "./add-to-cart";
 import Link from "next/link";
-
+import Galeria from "./galeria";
 
 export const dynamic = "force-dynamic";
 
@@ -28,14 +28,12 @@ const whats = `https://wa.me/${process.env.WHATSAPP_NUMBER}?text=${encodeURIComp
 return (
   <main className="produto-pagina">
     <div className="produto-pagina-img">
-      {produto.imagens[0] && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={produto.imagens[0]} alt={produto.nome} />
-      )}
+      <Galeria imagens={produto.imagens} nome={produto.nome} />
     </div>
 
     <div className="produto-pagina-info">
   <h1 className="produto-pagina-nome">{produto.nome}</h1>
+
   <p className="produto-pagina-preco">{brl(produto.precoCentavos)}</p>
   {produto.descricao && (
     <p className="produto-pagina-desc">{produto.descricao}</p>

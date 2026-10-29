@@ -3,11 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import {
-  updateProduct,
-  setEstoque,
-  addVariant,
-} from "@/app/actions/product-admin";
+import {updateProduct, setEstoque, addVariant} from "@/app/actions/product-admin";
+import { deleteVariant } from "@/app/actions/delete-variant";
+import { ConfirmButton } from "@/app/admin/confirm-button";
 
 export default async function EditarProduto({
   params,
@@ -72,7 +70,7 @@ export default async function EditarProduto({
       <h2 className="mb-3 mt-10 text-lg font-semibold">Estoque</h2>
       <ul className="space-y-2">
         {p.variantes.map((v) => (
-          <li key={v.id}>
+          <li key={v.id} className="flex items-center gap-3">
             <form action={setEstoque} className="flex items-center gap-3">
               <input type="hidden" name="variantId" value={v.id} />
               <span className="w-32 text-sm">{v.tamanho} · {v.cor}</span>
@@ -84,6 +82,17 @@ export default async function EditarProduto({
                 className="w-20 rounded border px-2 py-1"
               />
               <button className="rounded border px-3 py-1 text-sm">Atualizar</button>
+            </form>
+
+            <form action={deleteVariant}>
+              <input type="hidden" name="variantId" value={v.id} />
+              <input type="hidden" name="productId" value={p.id} />
+              <ConfirmButton
+                message={`Remover ${v.tamanho} · ${v.cor}? Se já houve pedido dessa variante, o estoque será apenas zerado.`}
+                className="rounded border px-3 py-1 text-sm text-red-600"
+              >
+                Remover
+              </ConfirmButton>
             </form>
           </li>
         ))}
