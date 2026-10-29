@@ -12,12 +12,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
 *,
 *::before,
@@ -705,4 +699,28 @@ body {
   .resumo-total {
     font-size: 1.75rem;
   }
+}
+
+.comprar { display: flex; flex-direction: column; gap: 18px; }
+.opcao-titulo { font-size: 14px; margin-bottom: 8px; }
+.opcao-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+.opcao-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-width: 48px; padding: 10px 14px;
+  border: 1px solid #d4d4d4; background: #fff; color: #111;
+  border-radius: 6px; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.opcao-btn:hover:not(:disabled) { border-color: #888; }
+
+.opcao-btn.ativo {
+  border-color: #111;
+  box-shadow: 0 0 0 1px #111; /* borda mais grossa sem mexer no tamanho */
+  background: #fafafa;
+  font-weight: 600;
+}
+.aviso-max {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #b45309;
 }

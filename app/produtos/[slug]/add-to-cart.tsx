@@ -4,27 +4,10 @@ import { useState } from "react";
 import { useCart } from "@/store/cart";
 import { brl } from "@/lib/format";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 type V = { id: string; tamanho: string; cor: string; estoque: number };
 
 const ORDEM = ["PP", "P", "M", "G", "GG", "XG"];
 
-// cores conhecidas para o quadradinho (ajuste ao seu catálogo)
 const CORES: Record<string, string> = {
   marrom: "#8b4500",
   caramelo: "#e0b890",
@@ -35,6 +18,7 @@ const CORES: Record<string, string> = {
   verde: "#15803d",
   vermelho: "#dc2626",
 };
+
 export default function AddToCart({
   variantes,
   precoCentavos,
@@ -42,118 +26,149 @@ export default function AddToCart({
   variantes: V[];
   precoCentavos: number;
 }) {
-
-
-  const [qtds, setQtds] = useState<Record<string, number>>({});
-  const [ok, setOk] = useState(false);
   const add = useCart((s) => s.add);
 
-  const cores = Array.from(new Set(variantes.map((v) => v.cor)));
-  const tamanhos = Array.from(new Set(variantes.map((v) => v.tamanho))).sort(
-    (a, b) => ORDEM.indexOf(a) - ORDEM.indexOf(b)
+  // só variantes com estoque, com texto normalizado
+  const disponiveis = variantes
+    .map((v) => ({
+      ...v,
+      cor: v.cor.trim(),
+      tamanho: v.tamanho.trim().toUpperCase(),
+    }))
+    .filter((v) => v.estoque > 0);
+
+  const cores = Array.from(new Set(disponiveis.map((v) => v.cor)));
+
+  const [cor, setCor] = useState(() => cores[0] ?? "");
+  const [tamanho, setTamanho] = useState("");
+  const [qtd, setQtd] = useState(1);
+  const [ok, setOk] = useState(false);
+
+  // tamanhos disponíveis só na cor escolhida
+  const tamanhos = Array.from(
+    new Set(disponiveis.filter((v) => v.cor === cor).map((v) => v.tamanho))
+  ).sort((a, b) => ORDEM.indexOf(a) - ORDEM.indexOf(b));
+
+  const variante = disponiveis.find(
+    (v) => v.cor === cor && v.tamanho === tamanho
   );
 
-  const total = Object.values(qtds).reduce((s, n) => s + n, 0);
+  function escolherCor(c: string) {
+    setCor(c);
+    setQtd(1);
+    const existe = disponiveis.some((v) => v.cor === c && v.tamanho === tamanho);
+    if (!existe) setTamanho("");
+  }
 
-  function mudar(v: V, delta: number) {
-    setQtds((prev) => {
-      const atual = prev[v.id] ?? 0;
-      const novo = Math.min(v.estoque, Math.max(0, atual + delta));
-      return { ...prev, [v.id]: novo };
-    });
+  function escolherTamanho(t: string) {
+    setTamanho(t);
+    setQtd(1);
   }
 
   function adicionar() {
-    if (total === 0) return;
-    for (const v of variantes) {
-      const n = qtds[v.id] ?? 0;
-      for (let i = 0; i < n; i++) add(v.id);
-    }
-    setQtds({});
+    if (!variante) return;
+    for (let i = 0; i < qtd; i++) add(variante.id);
+    setQtd(1);
     setOk(true);
     setTimeout(() => setOk(false), 1500);
   }
 
-  return (
-    
-    <div className="tamanhos">
-      <div className="resumo">
-  <div className="resumo-qtd">
-    <strong>{total}</strong> un
-  </div>
-  <p className="resumo-total">{brl(total * precoCentavos)}</p>
-</div>
-      <div className="grade-wrap">
-        <table className="grade">
-          <thead>
-            <tr>
-              <th></th>
-              {tamanhos.map((t) => (
-                <th key={t}>{t}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {cores.map((cor) => {
-              const hex = CORES[cor.toLowerCase()];
-              return (
-                <tr key={cor}>
-                  <th scope="row" className="grade-cor">
-                    {cor}
-                    {hex && (
-                      <span className="grade-amostra" style={{ background: hex }} />
-                    )}
-                  </th>
+  if (disponiveis.length === 0) {
+    return (
+      <div className="comprar">
+        <p className="aviso-max">Produto esgotado no momento.</p>
+      </div>
+    );
+  }
 
-                  {tamanhos.map((t) => {
-                    const v = variantes.find(
-                      (x) => x.cor === cor && x.tamanho === t
-                    );
-                    if (!v || v.estoque <= 0) {
-                      return (
-                        <td key={t} className="grade-esgotado">
-                          Esgotado
-                        </td>
-                      );
-                    }
-                    const q = qtds[v.id] ?? 0;
-                    return (
-                      <td key={t}>
-                        <span className="grade-preco"><span className="grade-preco">{brl(precoCentavos)}</span></span>
-                        <div className="stepper">
-                          <button
-                            type="button"
-                            onClick={() => mudar(v, -1)}
-                            disabled={q === 0}
-                          >
-                            −
-                          </button>
-                          <span>{q}</span>
-                          <button
-                            type="button"
-                            onClick={() => mudar(v, 1)}
-                            disabled={q >= v.estoque}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
+  return (
+    <div className="comprar">
+      {cores.length > 0 && (
+        <div className="opcao">
+          <p className="opcao-titulo">
+            Cor: <strong>{cor}</strong>
+          </p>
+          <div className="opcao-lista">
+            {cores.map((c) => {
+              const hex = CORES[c.toLowerCase()];
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => escolherCor(c)}
+                  className={`opcao-btn ${c === cor ? "ativo" : ""}`}
+                >
+                  {hex && (
+                    <span className="grade-amostra" style={{ background: hex }} />
+                  )}
+                  {c}
+                </button>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </div>
+      )}
+
+      <div className="opcao">
+        <p className="opcao-titulo">
+          Tamanho: <strong>{tamanho || "escolha"}</strong>
+        </p>
+        <div className="opcao-lista">
+          {tamanhos.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => escolherTamanho(t)}
+              className={`opcao-btn ${t === tamanho ? "ativo" : ""}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <div className="opcao">
+        <p className="opcao-titulo">Quantidade</p>
+        <div className="stepper">
+          <button
+            type="button"
+            onClick={() => setQtd((q) => Math.max(1, q - 1))}
+            disabled={qtd <= 1}
+          >
+            −
+          </button>
+          <span>{qtd}</span>
+          <button
+            type="button"
+            onClick={() =>
+              setQtd((q) => Math.min(variante?.estoque ?? 1, q + 1))
+            }
+            disabled={!variante || qtd >= variante.estoque}
+          >
+            +
+          </button>
+        </div>
+        {variante && qtd >= variante.estoque && (
+          <p className="aviso-max" role="status">
+            Quantidade máxima disponível ({variante.estoque}{" "}
+            {variante.estoque === 1 ? "unidade" : "unidades"})
+          </p>
+        )}
+      </div>
+
+      <p className="resumo-total">{brl(qtd * precoCentavos)}</p>
 
       <button
         type="button"
         onClick={adicionar}
-        disabled={total === 0}
+        disabled={!variante}
         className="botao-carrinho"
       >
-        {ok ? "Adicionado ✓" : "Adicionar ao carrinho"}
+        {ok
+          ? "Adicionado ✓"
+          : variante
+          ? "Adicionar ao carrinho"
+          : "Escolha o tamanho"}
       </button>
     </div>
   );

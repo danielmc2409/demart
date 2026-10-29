@@ -48,7 +48,10 @@ export default function Carrinho() {
     0
   );
 
+  const excedeu = linhas.some((l) => l.item.qtd > l.d.estoque);
+
   async function finalizar() {
+    if (excedeu) return;
     setErro("");
     setEnviando(true);
     const res = await createOrder({ nome, itens: items });
@@ -60,55 +63,61 @@ export default function Carrinho() {
     useCart.getState().clear();
     window.location.href = res.url;
   }
-if (carregando) return <p className="carrinho-msg">Carregando...</p>;
 
-if (linhas.length === 0) {
+  if (carregando) return <p className="carrinho-msg">Carregando...</p>;
+
+  if (linhas.length === 0) {
+    return (
+      <main className="carrinho">
+        <h1 className="carrinho-titulo">Carrinho</h1>
+        <p>Seu carrinho está vazio.</p>
+        <Link href="/" className="botao-voltar carrinho-voltar">
+          Voltar para a loja
+        </Link>
+      </main>
+    );
+  }
+
   return (
     <main className="carrinho">
       <h1 className="carrinho-titulo">Carrinho</h1>
-      <p>Seu carrinho está vazio.</p>
-      <Link href="/" className="botao-voltar carrinho-voltar">
-        Voltar para a loja
-      </Link>
-    </main>
-  );
-}
 
-return (
-  <main className="carrinho">
-    <h1 className="carrinho-titulo">Carrinho</h1>
+      <ul className="carrinho-lista">
+        {linhas.map(({ item, d }) => (
+          <li key={d.id} className="carrinho-item">
+            <div className="carrinho-info">
+              <p className="carrinho-nome">{d.nome}</p>
+              <p className="carrinho-detalhe">
+                {d.tamanho} · {d.cor} · {brl(d.precoCentavos)}
+              </p>
+              {item.qtd > d.estoque ? (
+                <p className="carrinho-erro">
+                  Só temos {d.estoque} em estoque. Diminua a quantidade.
+                </p>
+              ) : item.qtd === d.estoque ? (
+                <p className="aviso-max">Quantidade máxima disponível</p>
+              ) : null}
+            </div>
 
-    <ul className="carrinho-lista">
-      {linhas.map(({ item, d }) => (
-        <li key={d.id} className="carrinho-item">
-          <div className="carrinho-info">
-            <p className="carrinho-nome">{d.nome}</p>
-            <p className="carrinho-detalhe">
-              {d.tamanho} · {d.cor} · {brl(d.precoCentavos)}
-            </p>
-            {d.estoque < item.qtd && (
-              <p className="carrinho-erro">Só temos {d.estoque} em estoque</p>
-            )}
-          </div>
-
-          <div className="carrinho-qtd">
-            <button
-              type="button"
-              onClick={() => setQtd(d.id, item.qtd - 1)}
-              className="qtd-btn"
-            >
-              −
-            </button>
-            <span className="qtd-num">{item.qtd}</span>
-            <button
-              type="button"
-              onClick={() => setQtd(d.id, item.qtd + 1)}
-              className="qtd-btn"
-            >
-              +
-            </button>
-          </div>
-       </li>
+            <div className="carrinho-qtd">
+              <button
+                type="button"
+                onClick={() => setQtd(d.id, item.qtd - 1)}
+                className="qtd-btn"
+              >
+                −
+              </button>
+              <span className="qtd-num">{item.qtd}</span>
+              <button
+                type="button"
+                onClick={() => setQtd(d.id, Math.min(d.estoque, item.qtd + 1))}
+                disabled={item.qtd >= d.estoque}
+                className="qtd-btn"
+              >
+                +
+              </button>
+            </div>
+          </li>
         ))}
       </ul>
 
@@ -129,7 +138,7 @@ return (
       <button
         type="button"
         onClick={finalizar}
-        disabled={enviando || nome.trim().length < 2}
+        disabled={enviando || excedeu || nome.trim().length < 2}
         className="carrinho-finalizar"
       >
         {enviando ? "Enviando..." : "Finalizar pelo WhatsApp"}
