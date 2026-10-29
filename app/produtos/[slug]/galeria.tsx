@@ -28,36 +28,34 @@ export default function Galeria({
 
   return (
     <div className="galeria">
-      <div className="galeria-wrap">
-        <div className="galeria-faixa" ref={faixa} onScroll={aoRolar}>
-          {imagens.map((src, i) => (
-            <div key={src + i} className="galeria-slide">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={`${nome} - foto ${i + 1}`}
-                loading={i === 0 ? "eager" : "lazy"}
-                draggable={false}
-              />
-            </div>
+      <div className="galeria-faixa" ref={faixa} onScroll={aoRolar}>
+        {imagens.map((src, i) => (
+          <div key={src + i} className="galeria-slide">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt={`${nome} - foto ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              draggable={false}
+            />
+          </div>
+        ))}
+      </div>
+
+      {imagens.length > 1 && (
+        <div className="galeria-bolinhas">
+          {imagens.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => irPara(i)}
+              className={`galeria-bolinha ${i === atual ? "ativa" : ""}`}
+              aria-label={`Ir para a foto ${i + 1}`}
+              aria-current={i === atual}
+            />
           ))}
         </div>
-
-        {imagens.length > 1 && (
-          <div className="galeria-bolinhas">
-            {imagens.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => irPara(i)}
-                className={`galeria-bolinha ${i === atual ? "ativa" : ""}`}
-                aria-label={`Ir para a foto ${i + 1}`}
-                aria-current={i === atual}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      )}
 
       {imagens.length > 1 && (
         <div className="galeria-miniaturas">
