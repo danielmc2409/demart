@@ -10,6 +10,9 @@ import { createOrder } from "@/app/actions/create-order";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
 
+// mesmo limite por item aplicado no servidor (create-order.ts)
+const MAX_POR_ITEM = 20;
+
 export default function Carrinho() {
   const { items, setQtd } = useCart();
   const [detalhes, setDetalhes] = useState<Detalhe[]>([]);
@@ -28,12 +31,28 @@ export default function Carrinho() {
       setCarregando(false);
       return;
     }
-    getCartDetails(ids).then((d) => {
-      if (!cancelado) {
+
+    getCartDetails(ids)
+      .then((d) => {
+        if (cancelado) return;
         setDetalhes(d);
-        setCarregando(false);
-      }
-    });
+
+        // remove do carrinho o que o servidor não devolveu
+        // (produto oculto/excluído), senão o pedido inteiro é recusado
+        const validos = new Set(d.map((x) => x.id));
+        if (ids.some((id) => !validos.has(id))) {
+          useCart.setState((s) => ({
+            items: s.items.filter((i) => validos.has(i.variantId)),
+          }));
+        }
+      })
+      .catch(() => {
+        if (!cancelado) setErro("Não foi possível carregar o carrinho.");
+      })
+      .finally(() => {
+        if (!cancelado) setCarregando(false);
+      });
+
     return () => {
       cancelado = true;
     };
@@ -51,17 +70,32 @@ export default function Carrinho() {
   const excedeu = linhas.some((l) => l.item.qtd > l.d.estoque);
 
   async function finalizar() {
-    if (excedeu) return;
+    if (excedeu || enviando) return;
     setErro("");
     setEnviando(true);
-    const res = await createOrder({ nome, itens: items });
-    if (!res.ok) {
-      setErro(res.erro);
+
+    try {
+      // envia só o que está visível na tela
+      const res = await createOrder({
+        nome,
+        itens: linhas.map((l) => ({
+          variantId: l.item.variantId,
+          qtd: l.item.qtd,
+        })),
+      });
+
+      if (!res.ok) {
+        setErro(res.erro);
+        setEnviando(false);
+        return;
+      }
+
+      useCart.getState().clear();
+      window.location.href = res.url;
+    } catch {
+      setErro("Erro ao enviar o pedido. Tente novamente.");
       setEnviando(false);
-      return;
     }
-    useCart.getState().clear();
-    window.location.href = res.url;
   }
 
   if (carregando) return <p className="carrinho-msg">Carregando...</p>;
@@ -70,6 +104,7 @@ export default function Carrinho() {
     return (
       <main className="carrinho">
         <h1 className="carrinho-titulo">Carrinho</h1>
+        {erro && <p className="carrinho-erro">{erro}</p>}
         <p>Seu carrinho está vazio.</p>
         <Link href="/" className="botao-voltar carrinho-voltar">
           Voltar para a loja
@@ -92,7 +127,9 @@ export default function Carrinho() {
               </p>
               {item.qtd > d.estoque ? (
                 <p className="carrinho-erro">
-                  Só temos {d.estoque} em estoque. Diminua a quantidade.
+                  {d.estoque === 0
+                    ? "Item esgotado. Remova-o do carrinho."
+                    : `Só temos ${d.estoque} em estoque. Diminua a quantidade.`}
                 </p>
               ) : item.qtd === d.estoque ? (
                 <p className="aviso-max">Quantidade máxima disponível</p>
@@ -104,15 +141,19 @@ export default function Carrinho() {
                 type="button"
                 onClick={() => setQtd(d.id, item.qtd - 1)}
                 className="qtd-btn"
+                aria-label={`Diminuir quantidade de ${d.nome}`}
               >
                 −
               </button>
               <span className="qtd-num">{item.qtd}</span>
               <button
                 type="button"
-                onClick={() => setQtd(d.id, Math.min(d.estoque, item.qtd + 1))}
-                disabled={item.qtd >= d.estoque}
+                onClick={() =>
+                  setQtd(d.id, Math.min(d.estoque, MAX_POR_ITEM, item.qtd + 1))
+                }
+                disabled={item.qtd >= Math.min(d.estoque, MAX_POR_ITEM)}
                 className="qtd-btn"
+                aria-label={`Aumentar quantidade de ${d.nome}`}
               >
                 +
               </button>
