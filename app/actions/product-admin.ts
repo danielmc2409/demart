@@ -81,7 +81,7 @@ export async function createProduct(fd: FormData) {
     },
   });
 
-  revalidatePath("/produtos");
+  revalidatePath("/");
   redirect(`/admin/produtos/${criado.id}`);
 }
 export async function updateProduct(fd: FormData) {
@@ -94,7 +94,7 @@ export async function updateProduct(fd: FormData) {
 
   const p = await prisma.product.update({ where: { id }, data: base.dados! });
 
-  revalidatePath("/produtos");
+  revalidatePath("/");
   revalidatePath(`/produtos/${p.slug}`);
   redirect(`/admin/produtos/${id}?ok=1`);
 }
@@ -105,7 +105,7 @@ export async function toggleAtivo(fd: FormData) {
   const p = await prisma.product.findUnique({ where: { id } });
   if (!p) return;
   await prisma.product.update({ where: { id }, data: { ativo: !p.ativo } });
-  revalidatePath("/produtos");
+  revalidatePath("/");
   revalidatePath("/admin/produtos");
 }
 
