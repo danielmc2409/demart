@@ -763,17 +763,11 @@ body {
 .galeria-slide { flex: 0 0 100%; scroll-snap-align: center; }
 .galeria-slide img { width: 100%; display: block; user-select: none; }
 
-.galeria-wrap { position: relative; }
 
 .galeria-bolinhas {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: center;
-  gap: 6px;
-  pointer-events: none;
+  gap: 8px;
 }
 .galeria-bolinha {
   width: 8px;
@@ -781,9 +775,7 @@ body {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-  pointer-events: auto;
+  background: #d1d5db;
   cursor: pointer;
 }
-.galeria-bolinha.ativa { background: #fff; transform: scale(1.3); }
+.galeria-bolinha.ativa { background: #111; transform: scale(1.25); }
