@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { brl } from "@/lib/format";
 import { updateOrderStatus } from "@/app/actions/update-order-status";
+import { deleteOrder } from "@/app/actions/delete-order";
 import { logoutAction } from "@/app/actions/admin-auth";
+import { ConfirmButton } from "./confirm-button";
 import Link from "next/link";
 
 const ACOES = [
@@ -26,10 +28,14 @@ export default async function Admin() {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pedidos</h1>
-        <form action={logoutAction}>
-          <button className="text-sm underline">Sair</button>
-          <Link href="/admin/produtos" className="text-sm underline">Produtos</Link>
-        </form>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/produtos" className="text-sm underline">
+            Produtos
+          </Link>
+          <form action={logoutAction}>
+            <button className="text-sm underline">Sair</button>
+          </form>
+        </div>
       </div>
 
       {pedidos.length === 0 && <p>Nenhum pedido ainda.</p>}
@@ -60,7 +66,7 @@ export default async function Admin() {
               ))}
             </ul>
 
-            {p.status !== "CANCELADO" && (
+            {p.status !== "CANCELADO" ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {ACOES.filter((a) => a.status !== p.status).map((a) => (
                   <form key={a.status} action={updateOrderStatus}>
@@ -76,6 +82,16 @@ export default async function Admin() {
                   </form>
                 ))}
               </div>
+            ) : (
+              <form action={deleteOrder} className="mt-3">
+                <input type="hidden" name="id" value={p.id} />
+                <ConfirmButton
+                  message="Excluir este pedido de vez? Não dá para desfazer."
+                  className="rounded border px-3 py-1 text-sm text-red-600"
+                >
+                  Excluir
+                </ConfirmButton>
+              </form>
             )}
           </li>
         ))}

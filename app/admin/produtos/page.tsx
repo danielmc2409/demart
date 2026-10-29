@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { brl } from "@/lib/format";
 import { toggleAtivo } from "@/app/actions/product-admin";
+import { deleteProduct } from "@/app/actions/delete-product";
+import { ConfirmButton } from "@/app/admin/confirm-button";
 
 export default async function AdminProdutos() {
   await requireAdmin();
@@ -31,7 +33,7 @@ export default async function AdminProdutos() {
         {produtos.map((p) => {
           const estoque = p.variantes.reduce((s, v) => s + v.estoque, 0);
           return (
-            <li key={p.id} className="flex items-center justify-between rounded border p-4">
+            <li key={p.id} className="flex items-center justify-between gap-3 rounded border p-4">
               <div>
                 <Link href={`/admin/produtos/${p.id}`} className="font-medium underline">
                   {p.nome}
@@ -41,12 +43,25 @@ export default async function AdminProdutos() {
                   {p.ativo ? "Ativo" : "Oculto"}
                 </p>
               </div>
-              <form action={toggleAtivo}>
-                <input type="hidden" name="id" value={p.id} />
-                <button className="rounded border px-3 py-1 text-sm">
-                  {p.ativo ? "Ocultar" : "Ativar"}
-                </button>
-              </form>
+
+              <div className="flex gap-2">
+                <form action={toggleAtivo}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <button className="rounded border px-3 py-1 text-sm">
+                    {p.ativo ? "Ocultar" : "Ativar"}
+                  </button>
+                </form>
+
+                <form action={deleteProduct}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <ConfirmButton
+                    message="Excluir este produto? Se ele já tiver pedidos, será apenas ocultado."
+                    className="rounded border px-3 py-1 text-sm text-red-600"
+                  >
+                    Excluir
+                  </ConfirmButton>
+                </form>
+              </div>
             </li>
           );
         })}
