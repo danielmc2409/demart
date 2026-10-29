@@ -762,3 +762,28 @@ body {
 .galeria-faixa::-webkit-scrollbar { display: none; }
 .galeria-slide { flex: 0 0 100%; scroll-snap-align: center; }
 .galeria-slide img { width: 100%; display: block; user-select: none; }
+
+.galeria-wrap { position: relative; }
+
+.galeria-bolinhas {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.galeria-bolinha {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.galeria-bolinha.ativa { background: #fff; transform: scale(1.3); }
