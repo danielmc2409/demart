@@ -31,7 +31,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
       <body className="min-h-full flex flex-col">
           <header className="head">
-            <img src="/img/demart.png" alt="Demart" className="logo" />
+            <Link href="/"> <img src="/img/demart.png" alt="Demart" className="logo" /></Link>
+           
             <Link href="/carrinho">
   <img src="/img/carrinho.png" alt="Carrinho" className="icone-carrinho" />
 </Link>
