@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function Galeria({
   imagens,
@@ -10,14 +10,36 @@ export default function Galeria({
   nome: string;
 }) {
   const [atual, setAtual] = useState(0);
+  const faixa = useRef<HTMLDivElement>(null);
 
   if (imagens.length === 0) return null;
 
+  function aoRolar() {
+    const el = faixa.current;
+    if (!el) return;
+    setAtual(Math.round(el.scrollLeft / el.clientWidth));
+  }
+
+  function irPara(i: number) {
+    const el = faixa.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  }
+
   return (
     <div className="galeria">
-      <div className="galeria-principal">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imagens[atual]} alt={`${nome} - foto ${atual + 1}`} />
+      <div className="galeria-faixa" ref={faixa} onScroll={aoRolar}>
+        {imagens.map((src, i) => (
+          <div key={src + i} className="galeria-slide">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt={`${nome} - foto ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              draggable={false}
+            />
+          </div>
+        ))}
       </div>
 
       {imagens.length > 1 && (
@@ -26,7 +48,7 @@ export default function Galeria({
             <button
               key={src + i}
               type="button"
-              onClick={() => setAtual(i)}
+              onClick={() => irPara(i)}
               className={`galeria-mini ${i === atual ? "ativa" : ""}`}
               aria-label={`Ver foto ${i + 1}`}
             >
@@ -35,7 +57,6 @@ export default function Galeria({
             </button>
           ))}
         </div>
-    
       )}
     </div>
   );
