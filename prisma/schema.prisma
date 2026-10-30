@@ -39,15 +39,6 @@ enum OrderStatus {
   CANCELADO
 }
 
-model Order {
-  id            String      @id @default(cuid())
-  codigo        String      @unique
-  status        OrderStatus @default(PENDENTE)
-  clienteNome   String
-  totalCentavos Int
-  criadoEm      DateTime    @default(now())
-  items         OrderItem[]
-}
 
 model OrderItem {
   id            String  @id @default(cuid())
@@ -78,4 +69,31 @@ model Cupom {
   validoAte      DateTime?
   ativo          Boolean   @default(true)
   criadoEm       DateTime  @default(now())
+}
+
+
+model Order {
+  id               String         @id @default(cuid())
+  codigo           String         @unique
+  status           OrderStatus    @default(PENDENTE)
+  clienteNome      String
+  entrega          TipoEntrega    @default(RETIRADA)
+  endereco         String?
+  pagamento        FormaPagamento @default(PIX)
+  totalCentavos    Int
+  cupomCodigo      String?
+  descontoCentavos Int            @default(0)
+  criadoEm         DateTime       @default(now())
+  items            OrderItem[]
+}
+
+enum TipoEntrega {
+  RETIRADA
+  ENTREGA
+}
+
+enum FormaPagamento {
+  PIX
+  CARTAO
+  DINHEIRO
 }

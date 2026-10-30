@@ -7,6 +7,7 @@ import { useCart } from "@/store/cart";
 import { brl } from "@/lib/format";
 import { getCartDetails } from "@/app/actions/get-cart-details";
 import { createOrder } from "@/app/actions/create-order";
+import CupomInput, { CupomAplicado } from "./cupom-input";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
 
@@ -20,6 +21,17 @@ export default function Carrinho() {
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [cupomEstado, setCupomEstado] = useState<
+    (CupomAplicado & { base: number }) | null
+  >(null);
+
+  const [entrega, setEntrega] = useState<"RETIRADA" | "ENTREGA">("RETIRADA");
+  const [endereco, setEndereco] = useState("");
+  const [pagamento, setPagamento] = useState<"PIX" | "CARTAO" | "DINHEIRO">(
+    "PIX"
+  );
+
+  const faltaEndereco = entrega === "ENTREGA" && endereco.trim().length < 8;
 
   const chave = items.map((i) => i.variantId).join(",");
 
@@ -62,10 +74,16 @@ export default function Carrinho() {
     .map((i) => ({ item: i, d: detalhes.find((x) => x.id === i.variantId) }))
     .filter((l): l is { item: typeof l.item; d: Detalhe } => !!l.d);
 
-  const total = linhas.reduce(
+  const subtotal = linhas.reduce(
     (s, l) => s + l.d.precoCentavos * l.item.qtd,
     0
   );
+
+  // se o carrinho mudou depois de aplicar, o cupom deixa de valer e o cliente aplica de novo
+  const cupom =
+    cupomEstado && cupomEstado.base === subtotal ? cupomEstado : null;
+  const desconto = cupom?.descontoCentavos ?? 0;
+  const total = subtotal - desconto;
 
   const excedeu = linhas.some((l) => l.item.qtd > l.d.estoque);
 
@@ -78,6 +96,10 @@ export default function Carrinho() {
       // envia só o que está visível na tela
       const res = await createOrder({
         nome,
+        entrega,
+        endereco: entrega === "ENTREGA" ? endereco : undefined,
+        pagamento,
+        cupom: cupom?.codigo,
         itens: linhas.map((l) => ({
           variantId: l.item.variantId,
           qtd: l.item.qtd,
@@ -162,24 +184,109 @@ export default function Carrinho() {
         ))}
       </ul>
 
+      <CupomInput
+        subtotalCentavos={subtotal}
+        aplicado={cupom}
+        aoAplicar={(c) => setCupomEstado(c ? { ...c, base: subtotal } : null)}
+      />
+
+      {cupom && (
+        <>
+          <p className="carrinho-linha">Subtotal: {brl(subtotal)}</p>
+          <p className="carrinho-linha carrinho-desconto">
+            Desconto ({cupom.codigo}): − {brl(desconto)}
+          </p>
+        </>
+      )}
       <p className="carrinho-total">Total: {brl(total)}</p>
 
-      <label className="carrinho-label">
-        Seu nome
-        <input
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="carrinho-input"
-          placeholder="Maria Silva"
-        />
-      </label>
+      <section className="checkout">
+        <h2 className="checkout-titulo">Seus dados</h2>
+
+        <label className="carrinho-label">
+          Seu nome
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="carrinho-input"
+            placeholder="Maria Silva"
+          />
+        </label>
+
+        <fieldset className="checkout-grupo">
+          <legend>Como quer receber?</legend>
+          <div className="checkout-opcoes">
+            {(
+              [
+                ["RETIRADA", "Retirada"],
+                ["ENTREGA", "Entrega"],
+              ] as const
+            ).map(([valor, rotulo]) => (
+              <label
+                key={valor}
+                className={`checkout-opcao ${entrega === valor ? "ativa" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="entrega"
+                  value={valor}
+                  checked={entrega === valor}
+                  onChange={() => setEntrega(valor)}
+                />
+                {rotulo}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        {entrega === "ENTREGA" && (
+          <label className="carrinho-label">
+            Endereço de entrega
+            <textarea
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+              className="carrinho-input"
+              rows={3}
+              maxLength={200}
+              placeholder="Rua, número, bairro, complemento ou ponto de referência"
+            />
+          </label>
+        )}
+
+        <fieldset className="checkout-grupo">
+          <legend>Forma de pagamento</legend>
+          <div className="checkout-opcoes">
+            {(
+              [
+                ["PIX", "Pix"],
+                ["CARTAO", "Cartão"],
+                ["DINHEIRO", "Dinheiro"],
+              ] as const
+            ).map(([valor, rotulo]) => (
+              <label
+                key={valor}
+                className={`checkout-opcao ${pagamento === valor ? "ativa" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="pagamento"
+                  value={valor}
+                  checked={pagamento === valor}
+                  onChange={() => setPagamento(valor)}
+                />
+                {rotulo}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </section>
 
       {erro && <p className="carrinho-erro">{erro}</p>}
 
       <button
         type="button"
         onClick={finalizar}
-        disabled={enviando || excedeu || nome.trim().length < 2}
+        disabled={enviando || excedeu || nome.trim().length < 2 || faltaEndereco}
         className="carrinho-finalizar"
       >
         {enviando ? "Enviando..." : "Finalizar pelo WhatsApp"}

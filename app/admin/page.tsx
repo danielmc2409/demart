@@ -15,6 +15,12 @@ const ACOES = [
   { status: "CANCELADO", label: "Cancelar" },
 ] as const;
 
+const ROTULO_PAGAMENTO = {
+  PIX: "Pix",
+  CARTAO: "Cartão",
+  DINHEIRO: "Dinheiro",
+} as const;
+
 export default async function Admin() {
   await requireAdmin();
 
@@ -54,6 +60,11 @@ export default async function Admin() {
               </div>
               <div className="text-right">
                 <p className="font-semibold">{brl(p.totalCentavos)}</p>
+                {p.cupomCodigo && (
+                  <p className="text-sm text-green-700">
+                    {p.cupomCodigo} (− {brl(p.descontoCentavos)})
+                  </p>
+                )}
                 <p className="text-sm">{p.status}</p>
               </div>
             </div>
@@ -65,6 +76,14 @@ export default async function Admin() {
                 </li>
               ))}
             </ul>
+
+            <p className="mt-2 text-sm">
+              {p.entrega === "ENTREGA"
+                ? `Entrega: ${p.endereco}`
+                : "Retirada na loja"}
+              {" · "}
+              {ROTULO_PAGAMENTO[p.pagamento]}
+            </p>
 
             {p.status !== "CANCELADO" ? (
               <div className="mt-3 flex flex-wrap gap-2">
