@@ -734,7 +734,7 @@ body {
 }
 
 
-.galeria { display: flex; flex-direction: column; gap: 12px; }
+
 .galeria-miniaturas { display: flex; gap: 8px; overflow-x: auto; }
 .galeria-mini {
   flex: 0 0 72px; height: 72px; padding: 0;
@@ -743,33 +743,8 @@ body {
 }
 .galeria-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .galeria-mini.ativa { border-color: #111; opacity: 1; }
-.galeria-faixa {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  border-radius: 8px;
-}
-.galeria-faixa::-webkit-scrollbar { display: none; }
-.galeria-slide { flex: 0 0 100%; scroll-snap-align: center; }
-.galeria-slide img { width: 100%; display: block; user-select: none; }
 
 
-.galeria-bolinhas {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-.galeria-bolinha {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #d1d5db;
-  cursor: pointer;
-}
-.galeria-bolinha.ativa { background: #111111; transform: scale(1.25); }
 .pe {
   width: 100%;
   padding: 2rem 1rem 5rem; /* espaço embaixo para o botão flutuante não cobrir o texto */
@@ -801,4 +776,60 @@ body {
   border-top: 1px solid #c9c5c5;
   font-size: 0.8rem;
   color: #6b6b6b;
+}
+
+
+.galeria {
+  position: relative;
+}
+
+.galeria-faixa {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.galeria-faixa::-webkit-scrollbar {
+  display: none;
+}
+
+.galeria-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+.galeria-slide img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.galeria-contador {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.galeria-bolinhas {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.galeria-bolinha {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: #ccc;
+  cursor: pointer;
+}
+.galeria-bolinha.ativa {
+  background: #111;
 }

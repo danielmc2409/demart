@@ -41,7 +41,11 @@ export default function Galeria({
           </div>
         ))}
       </div>
-
+      {imagens.length > 1 && (
+        <div className="galeria-contador" aria-live="polite">
+          {atual + 1} de {imagens.length}
+        </div>
+      )}
       {imagens.length > 1 && (
         <div className="galeria-bolinhas">
           {imagens.map((_, i) => (
