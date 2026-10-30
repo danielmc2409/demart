@@ -32,9 +32,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+       <div className="top-bar">
+  <div className="top-bar-track">
+    {[0, 1].map((n) => (
+      <div className="top-bar-grupo" key={n} aria-hidden={n === 1}>
+        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
+        <span>FRETE GRÁTIS NAS COMPRAS A PARTIR DE R$ 29,99</span>
+        <span>ATENDIMENTO PELO WHATSAPP</span>
+      </div>
+    ))}
+  </div>
+</div>
         <header className="head">
           <Link href="/">
-            <img src="/img/demart.png" alt="Demart" className="logo" />
+            <img src="/img/logo.png" alt="Demart" className="logo" />
           </Link>
           <Link href="/carrinho">
             <img src="/img/carrinho.png" alt="Carrinho" className="icone-carrinho" />
@@ -97,9 +108,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href={whats}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 rounded-full bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg"
+          className="fixed bottom-4 right-4 rounded-full bg-green-600 px-1 cpy-0.2 text-sm font-medium text-white shadow-lg"
         >
-          WhatsApp
+          Whats
         </a>
       </body>
     </html>

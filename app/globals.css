@@ -34,8 +34,11 @@ main {
   flex: 1;               /* empurra o rodapé para o fim da página */
 }
 .head {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;   /* logo no centro */
   align-items: center;
   width: 100%;
   padding: 1rem 1.5rem;
@@ -45,7 +48,14 @@ main {
   font-size: 0.875rem;
 }
 
-
+/* carrinho: último link do cabeçalho, grudado na direita */
+.head a:last-child {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
 
 
 .secao{
@@ -616,13 +626,16 @@ main {
     font-size: 1.75rem;
     line-height: 1.2;
   }
-}/* ===== Página do produto: blindagem para celular ===== */
-html,
-body {
+}/* ===== Página
+ do produto: blindagem para celular ===== */
+html {
   max-width: 100%;
   overflow-x: hidden;
 }
-
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
 .produto-pagina {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1091,4 +1104,40 @@ body {
 }
 .checkout-opcao input {
   accent-color: #111;
+}
+
+.top-bar {
+  overflow: hidden;
+  background: #26343f;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.top-bar-track {
+  display: flex;
+  width: max-content;
+  animation: top-bar-corre 25s linear infinite;
+}
+
+.top-bar-grupo {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.top-bar-grupo span {
+  white-space: nowrap;
+  padding: 0 40px;
+}
+
+@keyframes top-bar-corre {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-track { animation: none; }
 }
