@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
 
+
 export default async function Home() {
   const destaques = await prisma.product.findMany({
     where: { ativo: true },

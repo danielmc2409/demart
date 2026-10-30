@@ -5,7 +5,7 @@ import { brl } from "@/lib/format";
 import AddToCart from "./add-to-cart";
 import Link from "next/link";
 import Galeria from "./galeria";
-
+import Compartilhar from "./compartilhar";
 export const dynamic = "force-dynamic";
 
 export default async function Produto({
@@ -27,13 +27,17 @@ const whats = `https://wa.me/${process.env.WHATSAPP_NUMBER}?text=${encodeURIComp
 )}`;
 return (
   <main className="produto-pagina">
+    
     <div className="produto-pagina-img">
       <Galeria imagens={produto.imagens} nome={produto.nome} />
     </div>
 
-    <div className="produto-pagina-info">
-  <h1 className="produto-pagina-nome">{produto.nome}</h1>
 
+    <div className="produto-pagina-info">
+    <div className="produto-pagina-topo">
+    <h1 className="produto-pagina-nome">{produto.nome}</h1>
+    <Compartilhar nome={produto.nome} preco={brl(produto.precoCentavos)} />
+  </div>
   <p className="produto-pagina-preco">{brl(produto.precoCentavos)}</p>
   {produto.descricao && (
     <p className="produto-pagina-desc">{produto.descricao}</p>
