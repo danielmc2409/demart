@@ -62,3 +62,20 @@ model OrderItem {
   precoCentavos Int
   qtd           Int
 }
+enum TipoCupom {
+  PERCENTUAL
+  FIXO
+}
+
+model Cupom {
+  id             String    @id @default(cuid())
+  codigo         String    @unique
+  tipo           TipoCupom
+  valor          Int       // PERCENTUAL: 1 a 100 | FIXO: em centavos
+  minimoCentavos Int       @default(0)
+  usosMaximos    Int?      // null = ilimitado
+  usos           Int       @default(0)
+  validoAte      DateTime?
+  ativo          Boolean   @default(true)
+  criadoEm       DateTime  @default(now())
+}
