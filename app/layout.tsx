@@ -37,8 +37,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     {[0, 1].map((n) => (
       <div className="top-bar-grupo" key={n} aria-hidden={n === 1}>
         <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
-        <span>FRETE GRÁTIS NAS COMPRAS A PARTIR DE R$ 29,99</span>
-        <span>ATENDIMENTO PELO WHATSAPP</span>
+        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
+        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
       </div>
     ))}
   </div>
@@ -103,14 +103,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {LOJA.desenvolvidoPor && <p>Desenvolvido por {LOJA.desenvolvidoPor}</p>}
           </div>
         </footer>
-
         <a
           href={whats}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 rounded-full bg-green-600 px-1 cpy-0.2 text-sm font-medium text-white shadow-lg"
+          className="whats-flutuante"
+          aria-label="Falar no WhatsApp"
         >
-          Whats
+          <img src="/whats.svg" alt="" />
         </a>
       </body>
     </html>

@@ -58,18 +58,7 @@ enum TipoCupom {
   FIXO
 }
 
-model Cupom {
-  id             String    @id @default(cuid())
-  codigo         String    @unique
-  tipo           TipoCupom
-  valor          Int       // PERCENTUAL: 1 a 100 | FIXO: em centavos
-  minimoCentavos Int       @default(0)
-  usosMaximos    Int?      // null = ilimitado
-  usos           Int       @default(0)
-  validoAte      DateTime?
-  ativo          Boolean   @default(true)
-  criadoEm       DateTime  @default(now())
-}
+
 
 
 model Order {
@@ -85,6 +74,8 @@ model Order {
   descontoCentavos Int            @default(0)
   criadoEm         DateTime       @default(now())
   items            OrderItem[]
+  clienteTelefone  String @default("")
+
 }
 
 enum TipoEntrega {
@@ -96,4 +87,28 @@ enum FormaPagamento {
   PIX
   CARTAO
   DINHEIRO
+}
+
+model Cupom {
+  id             String     @id @default(cuid())
+  codigo         String     @unique
+  tipo           TipoCupom
+  valor          Int        // PERCENTUAL: 1 a 100 | FIXO: em centavos
+  minimoCentavos Int        @default(0)
+  usosMaximos    Int?       // null = ilimitado
+  usos           Int        @default(0)
+  validoAte      DateTime?
+  ativo          Boolean    @default(true)
+  criadoEm       DateTime   @default(now())
+  usadoPor       CupomUso[]
+}
+
+model CupomUso {
+  id       String   @id @default(cuid())
+  cupomId  String
+  telefone String
+  criadoEm DateTime @default(now())
+  cupom    Cupom    @relation(fields: [cupomId], references: [id])
+
+  @@unique([cupomId, telefone])
 }

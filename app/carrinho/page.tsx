@@ -19,6 +19,7 @@ export default function Carrinho() {
   const [detalhes, setDetalhes] = useState<Detalhe[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [cupomEstado, setCupomEstado] = useState<
@@ -32,6 +33,7 @@ export default function Carrinho() {
   );
 
   const faltaEndereco = entrega === "ENTREGA" && endereco.trim().length < 8;
+  const faltaTelefone = telefone.replace(/\D/g, "").length < 10;
 
   const chave = items.map((i) => i.variantId).join(",");
 
@@ -96,6 +98,7 @@ export default function Carrinho() {
       // envia só o que está visível na tela
       const res = await createOrder({
         nome,
+        telefone,
         entrega,
         endereco: entrega === "ENTREGA" ? endereco : undefined,
         pagamento,
@@ -213,6 +216,19 @@ export default function Carrinho() {
           />
         </label>
 
+        <label className="carrinho-label">
+          Seu WhatsApp
+          <input
+            type="tel"
+            inputMode="tel"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            className="carrinho-input"
+            placeholder="(83) 99999-9999"
+            maxLength={20}
+          />
+        </label>
+
         <fieldset className="checkout-grupo">
           <legend>Como quer receber?</legend>
           <div className="checkout-opcoes">
@@ -286,7 +302,13 @@ export default function Carrinho() {
       <button
         type="button"
         onClick={finalizar}
-        disabled={enviando || excedeu || nome.trim().length < 2 || faltaEndereco}
+        disabled={
+          enviando ||
+          excedeu ||
+          nome.trim().length < 2 ||
+          faltaTelefone ||
+          faltaEndereco
+        }
         className="carrinho-finalizar"
       >
         {enviando ? "Enviando..." : "Finalizar pelo WhatsApp"}

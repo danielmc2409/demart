@@ -4,9 +4,15 @@ export type ResultadoCupom =
   | { ok: true; cupomId: string; codigo: string; descontoCentavos: number }
   | { ok: false; erro: string };
 
+export function normalizarTelefone(t: string) {
+  const n = t.replace(/\D/g, "");
+  return n.startsWith("55") ? n : "55" + n;
+}
+
 export async function validarCupom(
   codigoBruto: string,
-  subtotalCentavos: number
+  subtotalCentavos: number,
+  telefoneBruto?: string // novo
 ): Promise<ResultadoCupom> {
   const codigo = codigoBruto.trim().toUpperCase();
   if (!codigo) return { ok: false, erro: "Digite o código do cupom." };
@@ -26,12 +32,24 @@ export async function validarCupom(
         .replace(".", ",")} para este cupom.`,
     };
 
+  // novo: este telefone já usou?
+  if (telefoneBruto) {
+    const jaUsou = await prisma.cupomUso.findUnique({
+      where: {
+        cupomId_telefone: {
+          cupomId: cupom.id,
+          telefone: normalizarTelefone(telefoneBruto),
+        },
+      },
+    });
+    if (jaUsou) return { ok: false, erro: "Você já usou este cupom." };
+  }
+
   const bruto =
     cupom.tipo === "PERCENTUAL"
       ? Math.round((subtotalCentavos * cupom.valor) / 100)
       : cupom.valor;
 
-  // o desconto nunca passa do subtotal
   const descontoCentavos = Math.min(bruto, subtotalCentavos);
 
   return { ok: true, cupomId: cupom.id, codigo: cupom.codigo, descontoCentavos };
