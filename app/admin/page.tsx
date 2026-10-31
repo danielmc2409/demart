@@ -7,6 +7,8 @@ import { deleteOrder } from "@/app/actions/delete-order";
 import { logoutAction } from "@/app/actions/admin-auth";
 import { ConfirmButton } from "./confirm-button";
 import Link from "next/link";
+import AutoRefresh from "./auto-refresh";
+
 
 const ACOES = [
   { status: "CONFIRMADO", label: "Confirmar" },
@@ -32,6 +34,7 @@ export default async function Admin() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <AutoRefresh ultimo={pedidos[0]?.criadoEm.getTime() ?? 0} />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pedidos</h1>
         <div className="flex items-center gap-4">
