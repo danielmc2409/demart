@@ -83,7 +83,13 @@ export default async function Produto({
           <Compartilhar nome={produto.nome} preco={brl(produto.precoCentavos)} />
         </div>
 
-        <p className="produto-pagina-preco">{brl(produto.precoCentavos)}</p>
+        <p className="produto-pagina-preco">
+          {produto.precoAntigoCentavos != null &&
+            produto.precoAntigoCentavos > produto.precoCentavos && (
+              <s className="preco-antigo">{brl(produto.precoAntigoCentavos)}</s>
+            )}
+          <span>{brl(produto.precoCentavos)}</span>
+        </p>
 
         {produto.descricao && (
           <p className="produto-pagina-desc">{produto.descricao}</p>

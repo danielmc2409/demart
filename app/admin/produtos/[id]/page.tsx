@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import {updateProduct, setEstoque, addVariant} from "@/app/actions/product-admin";
 import { deleteVariant } from "@/app/actions/delete-variant";
 import { ConfirmButton } from "@/app/admin/confirm-button";
+import { brl } from "@/lib/format";
 
 export default async function EditarProduto({
   params,
@@ -56,6 +57,16 @@ export default async function EditarProduto({
             <input name="categoria" defaultValue={p.categoria} required className={campo} />
           </label>
         </div>
+        <p className="-mt-2 text-xs text-gray-500">
+          Se você baixar o preço, o valor anterior aparece riscado no site.
+          Se aumentar, o preço riscado some.
+        </p>
+        {p.precoAntigoCentavos != null && p.precoAntigoCentavos > p.precoCentavos && (
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="removerAntigo" />
+            Remover preço riscado (hoje: de {brl(p.precoAntigoCentavos)} por {brl(p.precoCentavos)})
+          </label>
+        )}
         <label className="block text-sm font-medium">
           Imagens (uma URL por linha)
           <textarea name="imagens" rows={3} defaultValue={p.imagens.join("\n")} className={campo} />

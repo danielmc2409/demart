@@ -92,7 +92,23 @@ export async function updateProduct(fd: FormData) {
   if (base.erro)
     redirect(`/admin/produtos/${id}?erro=${encodeURIComponent(base.erro)}`);
 
-  const p = await prisma.product.update({ where: { id }, data: base.dados! });
+  const atual = await prisma.product.findUnique({ where: { id } });
+  if (!atual)
+    redirect(`/admin/produtos/${id}?erro=${encodeURIComponent("Produto não encontrado")}`);
+
+  // Preço "de/por": baixou o preço -> o valor anterior vira o preço riscado.
+  // Subiu o preço -> não há desconto, então remove o preço riscado.
+  // Mesmo preço -> mantém como está (a menos que marque "remover preço antigo").
+  const novo = base.dados!.precoCentavos;
+  let precoAntigoCentavos = atual.precoAntigoCentavos;
+  if (novo < atual.precoCentavos) precoAntigoCentavos = atual.precoCentavos;
+  else if (novo > atual.precoCentavos) precoAntigoCentavos = null;
+  if (fd.get("removerAntigo")) precoAntigoCentavos = null;
+
+  const p = await prisma.product.update({
+    where: { id },
+    data: { ...base.dados!, precoAntigoCentavos },
+  });
 
   revalidatePath("/");
   revalidatePath(`/produtos/${p.slug}`);

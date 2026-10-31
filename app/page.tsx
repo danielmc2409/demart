@@ -17,11 +17,22 @@ const icone = {
   "aria-hidden": true,
 };
 
+const ORDEM = ["PP", "P", "M", "G", "GG", "XG", "XGG"];
+const porTamanho = (a: string, b: string) => {
+  const ia = ORDEM.indexOf(a.toUpperCase());
+  const ib = ORDEM.indexOf(b.toUpperCase());
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+  return a.localeCompare(b, "pt-BR", { numeric: true });
+};
+
 export default async function Home() {
   const destaques = await prisma.product.findMany({
     where: { ativo: true },
     orderBy: { id: "desc" },
     take: 8,
+    include: { variantes: { select: { tamanho: true, estoque: true } } },
   });
 
   return (
@@ -61,21 +72,53 @@ export default async function Home() {
         <h2 className="titulo-novidades">Novidades</h2>
 
         <div className="produtos-grid">
-          {destaques.map((p) => (
-            <Link key={p.id} href={`/produtos/${p.slug}`} className="produto-card">
-              <div className="produto-midia">
-                {p.imagens[0] && (
-                  <img src={p.imagens[0]} alt={p.nome} className="produto-img" />
-                )}
-              </div>
+          {destaques.map((p) => {
+            const promo =
+              p.precoAntigoCentavos != null &&
+              p.precoAntigoCentavos > p.precoCentavos;
+            const desconto = promo
+              ? Math.round((1 - p.precoCentavos / p.precoAntigoCentavos!) * 100)
+              : 0;
+            const disponiveis = p.variantes.filter((v) => v.estoque > 0);
+            const esgotado = p.variantes.length > 0 && disponiveis.length === 0;
+            const tamanhos = [...new Set(disponiveis.map((v) => v.tamanho))].sort(
+              porTamanho,
+            );
 
-              <div className="produto-info">
-                <h3 className="produto-nome">{p.nome}</h3>
-                <p className="produto-preco">{brl(p.precoCentavos)}</p>
-                <span className="botao-comprar">Comprar</span>
-              </div>
-            </Link>
-          ))}
+            return (
+              <Link
+                key={p.id}
+                href={`/produtos/${p.slug}`}
+                className={`produto-card${esgotado ? " esgotado" : ""}`}
+              >
+                <div className="produto-midia">
+                  {p.imagens[0] && (
+                    <img src={p.imagens[0]} alt={p.nome} className="produto-img" />
+                  )}
+                  {promo && desconto > 0 && (
+                    <span className="selo selo-desconto">-{desconto}%</span>
+                  )}
+                  {esgotado && <span className="selo selo-esgotado">Esgotado</span>}
+                </div>
+
+                <div className="produto-info">
+                  <h3 className="produto-nome">{p.nome}</h3>
+                  <p className="produto-preco">
+                    <span className="preco-atual">{brl(p.precoCentavos)}</span>
+                    {promo && (
+                      <s className="preco-antigo">{brl(p.precoAntigoCentavos!)}</s>
+                    )}
+                  </p>
+                  {tamanhos.length > 0 && (
+                    <p className="produto-tamanhos">{tamanhos.join(" · ")}</p>
+                  )}
+                  <span className="botao-comprar">
+                    {esgotado ? "Ver produto" : "Comprar"}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </main>

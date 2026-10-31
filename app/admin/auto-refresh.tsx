@@ -6,20 +6,20 @@ import { useRouter } from "next/navigation";
 // bipe duplo gerado pelo navegador (não precisa de arquivo de áudio)
 function tocar(ctx: AudioContext) {
   const agora = ctx.currentTime;
-  [880, 1175].forEach((freq, i) => {
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
     const osc = ctx.createOscillator();
     const ganho = ctx.createGain();
-    osc.type = "sine";
+    osc.type = "triangle";
     osc.frequency.value = freq;
     osc.connect(ganho);
     ganho.connect(ctx.destination);
 
-    const t = agora + i * 0.18;
+    const t = agora + i * 0.12;
     ganho.gain.setValueAtTime(0.0001, t);
-    ganho.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
-    ganho.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    ganho.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
     osc.start(t);
-    osc.stop(t + 0.18);
+    osc.stop(t + 0.95);
   });
 }
 

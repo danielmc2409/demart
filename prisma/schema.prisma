@@ -13,6 +13,7 @@ model Product {
   nome           String
   descricao      String?
   precoCentavos  Int
+  precoAntigoCentavos Int?
   categoria      String
   imagens        String[]
   ativo          Boolean   @default(true)
