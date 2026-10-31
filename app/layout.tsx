@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { LOJA } from "@/lib/loja";
+import CartLink from "./cart-link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,9 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Link href="/">
             <img src="/img/logo.png" alt="Demart" className="logo" />
           </Link>
-          <Link href="/carrinho">
-            <img src="/img/carrinho.png" alt="Carrinho" className="icone-carrinho" />
-          </Link>
+          <CartLink />
         </header>
 
         {children}
