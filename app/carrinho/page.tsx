@@ -37,40 +37,40 @@ export default function Carrinho() {
 
   const chave = items.map((i) => i.variantId).join(",");
 
-  useEffect(() => {
-    let cancelado = false;
-    const ids = chave ? chave.split(",") : [];
-    if (ids.length === 0) {
-      setDetalhes([]);
-      setCarregando(false);
-      return;
-    }
+useEffect(() => {
+  let cancelado = false;
+  const ids = chave ? chave.split(",") : [];
 
-    getCartDetails(ids)
-      .then((d) => {
-        if (cancelado) return;
-        setDetalhes(d);
+  // carrinho vazio também passa por uma Promise, então o setState
+  // acontece no .then (assíncrono) e não direto no corpo do efeito
+  const busca: Promise<Detalhe[]> =
+    ids.length === 0 ? Promise.resolve([]) : getCartDetails(ids);
 
-        // remove do carrinho o que o servidor não devolveu
-        // (produto oculto/excluído), senão o pedido inteiro é recusado
-        const validos = new Set(d.map((x) => x.id));
-        if (ids.some((id) => !validos.has(id))) {
-          useCart.setState((s) => ({
-            items: s.items.filter((i) => validos.has(i.variantId)),
-          }));
-        }
-      })
-      .catch(() => {
-        if (!cancelado) setErro("Não foi possível carregar o carrinho.");
-      })
-      .finally(() => {
-        if (!cancelado) setCarregando(false);
-      });
+  busca
+    .then((d) => {
+      if (cancelado) return;
+      setDetalhes(d);
 
-    return () => {
-      cancelado = true;
-    };
-  }, [chave]);
+      // remove do carrinho o que o servidor não devolveu
+      // (produto oculto/excluído), senão o pedido inteiro é recusado
+      const validos = new Set(d.map((x) => x.id));
+      if (ids.some((id) => !validos.has(id))) {
+        useCart.setState((s) => ({
+          items: s.items.filter((i) => validos.has(i.variantId)),
+        }));
+      }
+    })
+    .catch(() => {
+      if (!cancelado) setErro("Não foi possível carregar o carrinho.");
+    })
+    .finally(() => {
+      if (!cancelado) setCarregando(false);
+    });
+
+  return () => {
+    cancelado = true;
+  };
+}, [chave]);
 
   const linhas = items
     .map((i) => ({ item: i, d: detalhes.find((x) => x.id === i.variantId) }))
@@ -114,9 +114,9 @@ export default function Carrinho() {
         setEnviando(false);
         return;
       }
-
-      useCart.getState().clear();
-      window.location.href = res.url;
+      
+useCart.getState().clear();
+window.location.assign(res.url);
     } catch {
       setErro("Erro ao enviar o pedido. Tente novamente.");
       setEnviando(false);

@@ -16,6 +16,9 @@ const ROTULO_PAGAMENTO = {
   DINHEIRO: "Dinheiro",
 } as const;
 
+// só mensagens desta classe chegam ao cliente; o resto vira erro genérico
+class ErroNegocio extends Error {}
+
 const schema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome").max(80),
@@ -55,6 +58,10 @@ type Result =
   | { ok: false; erro: string };
 
 export async function createOrder(input: unknown): Promise<Result> {
+  // confere a configuração ANTES de mexer em estoque ou cupom
+  const numero = process.env.WHATSAPP_NUMBER;
+  if (!numero) return { ok: false, erro: "WhatsApp da loja não configurado" };
+
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0].message };
@@ -64,84 +71,94 @@ export async function createOrder(input: unknown): Promise<Result> {
   const tel = normalizarTelefone(telefone);
 
   try {
-    const order = await prisma.$transaction(async (tx) => {
-      const variantes = await tx.variant.findMany({
-        where: { id: { in: itens.map((i) => i.variantId) } },
-        include: { product: true },
-      });
-
-      let total = 0;
-      const orderItems = [];
-
-      for (const item of itens) {
-        const v = variantes.find((x) => x.id === item.variantId);
-        if (!v || !v.product.ativo) throw new Error("Produto indisponível");
-
-        const { count } = await tx.variant.updateMany({
-          where: { id: v.id, estoque: { gte: item.qtd } },
-          data: { estoque: { decrement: item.qtd } },
+    const order = await prisma.$transaction(
+      async (tx) => {
+        const variantes = await tx.variant.findMany({
+          where: { id: { in: itens.map((i) => i.variantId) } },
+          include: { product: true },
         });
-        if (count === 0) {
-          throw new Error(
-            `Sem estoque suficiente: ${v.product.nome} (${v.tamanho}, ${v.cor})`
-          );
+
+        let total = 0;
+        const orderItems = [];
+
+        for (const item of itens) {
+          const v = variantes.find((x) => x.id === item.variantId);
+          if (!v || !v.product.ativo)
+            throw new ErroNegocio("Produto indisponível");
+
+          const { count } = await tx.variant.updateMany({
+            where: { id: v.id, estoque: { gte: item.qtd } },
+            data: { estoque: { decrement: item.qtd } },
+          });
+          if (count === 0) {
+            throw new ErroNegocio(
+              `Sem estoque suficiente: ${v.product.nome} (${v.tamanho}, ${v.cor})`
+            );
+          }
+
+          total += v.product.precoCentavos * item.qtd;
+          orderItems.push({
+            variantId: v.id,
+            nome: v.product.nome,
+            tamanho: v.tamanho,
+            cor: v.cor,
+            precoCentavos: v.product.precoCentavos,
+            qtd: item.qtd,
+          });
         }
 
-        total += v.product.precoCentavos * item.qtd;
-        orderItems.push({
-          variantId: v.id,
-          nome: v.product.nome,
-          tamanho: v.tamanho,
-          cor: v.cor,
-          precoCentavos: v.product.precoCentavos,
-          qtd: item.qtd,
-        });
-      }
+        let desconto = 0;
+        let cupomCodigo: string | null = null;
 
-      let desconto = 0;
-      let cupomCodigo: string | null = null;
+        if (cupom) {
+          // usa a mesma transação (não pede outra conexão ao pool)
+          const r = await validarCupom(cupom, total, tel, tx);
+          if (!r.ok) throw new ErroNegocio(r.erro);
 
-      if (cupom) {
-        const r = await validarCupom(cupom, total, tel);
-        if (!r.ok) throw new Error(r.erro);
+          const c = await tx.cupom.findUniqueOrThrow({
+            where: { id: r.cupomId },
+          });
 
-        const c = await tx.cupom.findUniqueOrThrow({ where: { id: r.cupomId } });
+          // o banco recusa se este telefone já usou o cupom (P2002)
+          await tx.cupomUso.create({
+            data: { cupomId: r.cupomId, telefone: tel },
+          });
 
-        // o banco recusa se este telefone já usou o cupom
-        await tx.cupomUso.create({
-          data: { cupomId: r.cupomId, telefone: tel },
-        });
+          const { count } = await tx.cupom.updateMany({
+            where: {
+              id: c.id,
+              ativo: true,
+              ...(c.usosMaximos !== null
+                ? { usos: { lt: c.usosMaximos } }
+                : {}),
+            },
+            data: { usos: { increment: 1 } },
+          });
+          if (count === 0) throw new ErroNegocio("Cupom esgotado.");
 
-        const { count } = await tx.cupom.updateMany({
-          where: {
-            id: c.id,
-            ativo: true,
-            ...(c.usosMaximos !== null ? { usos: { lt: c.usosMaximos } } : {}),
+          desconto = r.descontoCentavos;
+          cupomCodigo = r.codigo;
+        }
+
+        return tx.order.create({
+          data: {
+            codigo: gerarCodigo(),
+            clienteNome: nome,
+            clienteTelefone: tel,
+            entrega,
+            endereco: entrega === "ENTREGA" ? endereco : null,
+            pagamento,
+            totalCentavos: total - desconto,
+            cupomCodigo,
+            descontoCentavos: desconto,
+            items: { create: orderItems },
           },
-          data: { usos: { increment: 1 } },
+          include: { items: true },
         });
-        if (count === 0) throw new Error("Cupom esgotado.");
-
-        desconto = r.descontoCentavos;
-        cupomCodigo = r.codigo;
-      }
-
-      return tx.order.create({
-        data: {
-          codigo: gerarCodigo(),
-          clienteNome: nome,
-          clienteTelefone: tel,
-          entrega,
-          endereco: entrega === "ENTREGA" ? endereco : null,
-          pagamento,
-          totalCentavos: total - desconto,
-          cupomCodigo,
-          descontoCentavos: desconto,
-          items: { create: orderItems },
-        },
-        include: { items: true },
-      });
-    });
+      },
+      // padrão é 5 s; com o Neon "acordando" pode estourar
+      { maxWait: 10_000, timeout: 20_000 }
+    );
 
     const linhas = order.items.map(
       (i) =>
@@ -168,15 +185,14 @@ export async function createOrder(input: unknown): Promise<Result> {
       `Telefone: ${order.clienteTelefone}`,
     ].join("\n");
 
-    const numero = process.env.WHATSAPP_NUMBER;
-    if (!numero) return { ok: false, erro: "WhatsApp da loja não configurado" };
-
     return {
       ok: true,
       codigo: order.codigo,
       url: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
     };
   } catch (e) {
+    if (e instanceof ErroNegocio) return { ok: false, erro: e.message };
+
     // corrida: duas requisições tentando usar o mesmo cupom com o mesmo telefone
     if (
       cupom &&
@@ -185,9 +201,12 @@ export async function createOrder(input: unknown): Promise<Result> {
     ) {
       return { ok: false, erro: "Você já usou este cupom." };
     }
+
+    // erro inesperado: registra no servidor, não mostra detalhes ao cliente
+    console.error("Erro em createOrder:", e);
     return {
       ok: false,
-      erro: e instanceof Error ? e.message : "Erro ao criar pedido",
+      erro: "Não foi possível finalizar o pedido. Tente novamente.",
     };
   }
 }

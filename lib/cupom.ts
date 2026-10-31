@@ -1,23 +1,28 @@
+// lib/cupom.ts
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 export type ResultadoCupom =
   | { ok: true; cupomId: string; codigo: string; descontoCentavos: number }
   | { ok: false; erro: string };
 
+// 10-11 dígitos = sem código do país (inclui DDD 55); 12+ já vem com 55
 export function normalizarTelefone(t: string) {
   const n = t.replace(/\D/g, "");
-  return n.startsWith("55") ? n : "55" + n;
+  return n.length <= 11 ? "55" + n : n;
 }
 
 export async function validarCupom(
   codigoBruto: string,
   subtotalCentavos: number,
-  telefoneBruto?: string // novo
+  telefoneBruto?: string,
+  // dentro de uma $transaction, passe o `tx`; fora dela usa o prisma normal
+  db: Prisma.TransactionClient = prisma
 ): Promise<ResultadoCupom> {
   const codigo = codigoBruto.trim().toUpperCase();
   if (!codigo) return { ok: false, erro: "Digite o código do cupom." };
 
-  const cupom = await prisma.cupom.findUnique({ where: { codigo } });
+  const cupom = await db.cupom.findUnique({ where: { codigo } });
 
   if (!cupom || !cupom.ativo) return { ok: false, erro: "Cupom inválido." };
   if (cupom.validoAte && cupom.validoAte < new Date())
@@ -32,9 +37,9 @@ export async function validarCupom(
         .replace(".", ",")} para este cupom.`,
     };
 
-  // novo: este telefone já usou?
+  // este telefone já usou?
   if (telefoneBruto) {
-    const jaUsou = await prisma.cupomUso.findUnique({
+    const jaUsou = await db.cupomUso.findUnique({
       where: {
         cupomId_telefone: {
           cupomId: cupom.id,

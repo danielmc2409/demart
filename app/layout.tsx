@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: { default: "Demart", template: "%s | Demart" },
   description: "Roupas com atendimento pelo WhatsApp",
   openGraph: { type: "website", locale: "pt_BR", siteName: "Demart" },
