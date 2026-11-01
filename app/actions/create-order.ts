@@ -120,7 +120,7 @@ export async function createOrder(input: unknown): Promise<Result> {
         if (cupom) {
           // usa a mesma transação (não pede outra conexão ao pool)
           const r = await validarCupom(cupom, total, tel, tx);
-          if (!r.ok) throw new ErroNegocio(r.erro);
+        if (!r.ok) throw new ErroNegocio(r.erro, true);
 
           const c = await tx.cupom.findUniqueOrThrow({
             where: { id: r.cupomId },
