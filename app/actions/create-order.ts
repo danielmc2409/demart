@@ -141,7 +141,7 @@ export async function createOrder(input: unknown): Promise<Result> {
             },
             data: { usos: { increment: 1 } },
           });
-          if (count === 0) throw new ErroNegocio("Cupom esgotado.");
+          if (count === 0) throw new ErroNegocio("Cupom esgotado.", true);
 
           desconto = r.descontoCentavos;
           cupomCodigo = r.codigo;
