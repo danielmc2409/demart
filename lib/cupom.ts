@@ -1,16 +1,11 @@
 // lib/cupom.ts
 import { prisma } from "@/lib/prisma";
+import { normalizarTelefone } from "@/lib/telefone";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ResultadoCupom =
   | { ok: true; cupomId: string; codigo: string; descontoCentavos: number }
   | { ok: false; erro: string };
-
-// 10-11 dígitos = sem código do país (inclui DDD 55); 12+ já vem com 55
-export function normalizarTelefone(t: string) {
-  const n = t.replace(/\D/g, "");
-  return n.length <= 11 ? "55" + n : n;
-}
 
 export async function validarCupom(
   codigoBruto: string,
@@ -39,13 +34,12 @@ export async function validarCupom(
 
   // este telefone já usou?
   if (telefoneBruto) {
+    const telefone = normalizarTelefone(telefoneBruto);
+    if (!telefone)
+      return { ok: false, erro: "Informe um telefone válido com DDD." };
+
     const jaUsou = await db.cupomUso.findUnique({
-      where: {
-        cupomId_telefone: {
-          cupomId: cupom.id,
-          telefone: normalizarTelefone(telefoneBruto),
-        },
-      },
+      where: { cupomId_telefone: { cupomId: cupom.id, telefone } },
     });
     if (jaUsou) return { ok: false, erro: "Você já usou este cupom." };
   }
