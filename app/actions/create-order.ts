@@ -6,7 +6,8 @@ import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { brl } from "@/lib/format";
-import { validarCupom, normalizarTelefone } from "@/lib/cupom";
+import { validarCupom } from "@/lib/cupom";
+import { normalizarTelefone } from "@/lib/telefone";
 
 const gerarCodigo = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
