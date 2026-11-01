@@ -18,8 +18,13 @@ const ROTULO_PAGAMENTO = {
 } as const;
 
 // só mensagens desta classe chegam ao cliente; o resto vira erro genérico
-class ErroNegocio extends Error {}
-
+class ErroNegocio extends Error {
+  cupom: boolean; // true = o erro é do cupom (o carrinho então remove o cupom)
+  constructor(mensagem: string, cupom = false) {
+    super(mensagem);
+    this.cupom = cupom;
+  }
+}
 const schema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome").max(80),
