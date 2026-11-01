@@ -56,6 +56,8 @@ export default function AddToCart({
   const variante = disponiveis.find(
     (v) => v.cor === cor && v.tamanho === tamanho
   );
+  // limite por pedido: o menor entre o estoque e o máximo por item
+  const maxQtd = variante ? Math.min(variante.estoque, MAX_POR_ITEM) : 1;
 
   function escolherCor(c: string) {
     setCor(c);
@@ -164,12 +166,6 @@ export default function AddToCart({
             +
           </button>
         </div>
-        {variante && qtd >= variante.estoque && (
-          <p className="aviso-max" role="status">
-            Quantidade máxima disponível ({variante.estoque}{" "}
-            {variante.estoque === 1 ? "unidade" : "unidades"})
-          </p>
-        )}
       </div>
 
       <p className="resumo-total">{brl(qtd * precoCentavos)}</p>
