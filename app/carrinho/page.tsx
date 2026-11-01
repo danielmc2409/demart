@@ -8,6 +8,7 @@ import { brl } from "@/lib/format";
 import { getCartDetails } from "@/app/actions/get-cart-details";
 import { createOrder } from "@/app/actions/create-order";
 import CupomInput, { CupomAplicado } from "./cupom-input";
+import { normalizarTelefone } from "@/lib/telefone";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
 
