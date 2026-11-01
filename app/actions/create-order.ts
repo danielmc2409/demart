@@ -4,12 +4,9 @@
 import { z } from "zod";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
 import { brl } from "@/lib/format";
-import { validarCupom } from "@/lib/cupom";
 import { normalizarTelefone } from "@/lib/telefone";
 import { MAX_POR_ITEM } from "@/lib/limites";
-
 
 const gerarCodigo = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -20,17 +17,12 @@ const ROTULO_PAGAMENTO = {
 } as const;
 
 // só mensagens desta classe chegam ao cliente; o resto vira erro genérico
-class ErroNegocio extends Error {
-  cupom: boolean; // true = o erro é do cupom (o carrinho então remove o cupom)
-  constructor(mensagem: string, cupom = false) {
-    super(mensagem);
-    this.cupom = cupom;
-  }
-}
+class ErroNegocio extends Error {}
+
 const schema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome").max(80),
-        telefone: z
+    telefone: z
       .string()
       .trim()
       .max(30, "Telefone muito longo")
@@ -41,12 +33,11 @@ const schema = z
     entrega: z.enum(["RETIRADA", "ENTREGA"]),
     endereco: z.string().trim().max(200).optional(),
     pagamento: z.enum(["PIX", "CARTAO", "DINHEIRO"]),
-    cupom: z.string().trim().max(40).optional(),
     itens: z
       .array(
         z.object({
           variantId: z.string(),
-                    qtd: z
+          qtd: z
             .number()
             .int()
             .min(1, "Quantidade inválida")
@@ -68,10 +59,10 @@ const schema = z
 
 type Result =
   | { ok: true; codigo: string; url: string }
-  | { ok: false; erro: string; cupom?: boolean };
+  | { ok: false; erro: string };
 
 export async function createOrder(input: unknown): Promise<Result> {
-  // confere a configuração ANTES de mexer em estoque ou cupom
+  // confere a configuração ANTES de mexer em estoque
   const numero = process.env.WHATSAPP_NUMBER;
   if (!numero) return { ok: false, erro: "WhatsApp da loja não configurado" };
 
@@ -79,9 +70,8 @@ export async function createOrder(input: unknown): Promise<Result> {
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0].message };
   }
-  const { nome, telefone, entrega, endereco, pagamento, itens, cupom } =
-    parsed.data;
-    const tel = normalizarTelefone(telefone)!; // já validado no schema
+  const { nome, telefone, entrega, endereco, pagamento, itens } = parsed.data;
+  const tel = normalizarTelefone(telefone)!; // já validado no schema
 
   try {
     const order = await prisma.$transaction(
@@ -120,39 +110,6 @@ export async function createOrder(input: unknown): Promise<Result> {
           });
         }
 
-        let desconto = 0;
-        let cupomCodigo: string | null = null;
-
-        if (cupom) {
-          // usa a mesma transação (não pede outra conexão ao pool)
-          const r = await validarCupom(cupom, total, tel, tx);
-        if (!r.ok) throw new ErroNegocio(r.erro, true);
-
-          const c = await tx.cupom.findUniqueOrThrow({
-            where: { id: r.cupomId },
-          });
-
-          // o banco recusa se este telefone já usou o cupom (P2002)
-          await tx.cupomUso.create({
-            data: { cupomId: r.cupomId, telefone: tel },
-          });
-
-          const { count } = await tx.cupom.updateMany({
-            where: {
-              id: c.id,
-              ativo: true,
-              ...(c.usosMaximos !== null
-                ? { usos: { lt: c.usosMaximos } }
-                : {}),
-            },
-            data: { usos: { increment: 1 } },
-          });
-          if (count === 0) throw new ErroNegocio("Cupom esgotado.", true);
-
-          desconto = r.descontoCentavos;
-          cupomCodigo = r.codigo;
-        }
-
         return tx.order.create({
           data: {
             codigo: gerarCodigo(),
@@ -161,9 +118,7 @@ export async function createOrder(input: unknown): Promise<Result> {
             entrega,
             endereco: entrega === "ENTREGA" ? endereco : null,
             pagamento,
-            totalCentavos: total - desconto,
-            cupomCodigo,
-            descontoCentavos: desconto,
+            totalCentavos: total,
             items: { create: orderItems },
           },
           include: { items: true },
@@ -183,12 +138,6 @@ export async function createOrder(input: unknown): Promise<Result> {
       "",
       ...linhas,
       "",
-      ...(order.cupomCodigo
-        ? [
-            `Subtotal: ${brl(order.totalCentavos + order.descontoCentavos)}`,
-            `Cupom ${order.cupomCodigo}: - ${brl(order.descontoCentavos)}`,
-          ]
-        : []),
       `Total: ${brl(order.totalCentavos)}`,
       "",
       order.entrega === "ENTREGA"
@@ -204,17 +153,7 @@ export async function createOrder(input: unknown): Promise<Result> {
       url: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
     };
   } catch (e) {
-    if (e instanceof ErroNegocio)
-  return { ok: false, erro: e.message, cupom: e.cupom };
-
-    // corrida: duas requisições tentando usar o mesmo cupom com o mesmo telefone
-    if (
-      cupom &&
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
-      return { ok: false, erro: "Você já usou este cupom.", cupom: true };
-    }
+    if (e instanceof ErroNegocio) return { ok: false, erro: e.message };
 
     // erro inesperado: registra no servidor, não mostra detalhes ao cliente
     console.error("Erro em createOrder:", e);
