@@ -8,7 +8,6 @@ import { brl } from "@/lib/format";
 import { MAX_POR_ITEM } from "@/lib/limites";
 import { getCartDetails } from "@/app/actions/get-cart-details";
 import { createOrder } from "@/app/actions/create-order";
-import CupomInput, { CupomAplicado } from "./cupom-input";
 import { normalizarTelefone } from "@/lib/telefone";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
@@ -21,10 +20,6 @@ export default function Carrinho() {
   const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [avisoCupom, setAvisoCupom] = useState("");
-  const [cupomEstado, setCupomEstado] = useState<
-    (CupomAplicado & { base: number }) | null
-  >(null);
 
   const [entrega, setEntrega] = useState<"RETIRADA" | "ENTREGA">("RETIRADA");
   const [endereco, setEndereco] = useState("");
@@ -81,12 +76,6 @@ useEffect(() => {
     0
   );
 
-  // se o carrinho mudou depois de aplicar, o cupom deixa de valer e o cliente aplica de novo
-  const cupom =
-    cupomEstado && cupomEstado.base === subtotal ? cupomEstado : null;
-  const desconto = cupom?.descontoCentavos ?? 0;
-  const total = subtotal - desconto;
-
   const excedeu = linhas.some(
     (l) => l.item.qtd > Math.min(l.d.estoque, MAX_POR_ITEM)
   );
@@ -104,7 +93,6 @@ useEffect(() => {
         entrega,
         endereco: entrega === "ENTREGA" ? endereco : undefined,
         pagamento,
-        cupom: cupom?.codigo,
         itens: linhas.map((l) => ({
           variantId: l.item.variantId,
           qtd: l.item.qtd,
@@ -112,15 +100,7 @@ useEffect(() => {
       });
 
       if (!res.ok) {
-        if (res.cupom) {
-          // o erro é do cupom: tira ele do pedido para o cliente poder finalizar
-          setCupomEstado(null);
-          setAvisoCupom(
-            `${res.erro} O cupom foi removido; confira o total e finalize de novo.`
-          );
-        } else {
-          setErro(res.erro);
-        }
+        setErro(res.erro);
         setEnviando(false);
         return;
       }
@@ -130,29 +110,6 @@ window.location.assign(res.url);
     } catch {
       setErro("Erro ao enviar o pedido. Tente novamente.");
       setEnviando(false);
-    }
-  }
-
-  // ao sair do campo de telefone, confere se este número já usou o cupom
-  async function conferirCupomComTelefone() {
-    if (!cupom || faltaTelefone) return;
-    try {
-      const res = await fetch("/api/cupom", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigo: cupom.codigo,
-          subtotalCentavos: subtotal,
-          telefone,
-        }),
-      });
-      const dados = await res.json();
-      if (!dados.ok) {
-        setCupomEstado(null);
-        setAvisoCupom(`${dados.erro} O cupom foi removido do pedido.`);
-      }
-    } catch {
-      // sem rede: o servidor confere de novo ao finalizar
     }
   }
 
@@ -228,30 +185,7 @@ window.location.assign(res.url);
         ))}
       </ul>
 
-      <CupomInput
-        subtotalCentavos={subtotal}
-        telefone={faltaTelefone ? undefined : telefone}
-        aplicado={cupom}
-        aoAplicar={(c) => {
-          setCupomEstado(c ? { ...c, base: subtotal } : null);
-          setAvisoCupom("");
-        }}
-      />
-      {avisoCupom && (
-        <p className="cupom-erro" role="alert">
-          {avisoCupom}
-        </p>
-      )}
-
-      {cupom && (
-        <>
-          <p className="carrinho-linha">Subtotal: {brl(subtotal)}</p>
-          <p className="carrinho-linha carrinho-desconto">
-            Desconto ({cupom.codigo}): − {brl(desconto)}
-          </p>
-        </>
-      )}
-      <p className="carrinho-total">Total: {brl(total)}</p>
+      <p className="carrinho-total">Total: {brl(subtotal)}</p>
 
       <section className="checkout">
         <h2 className="checkout-titulo">Seus dados</h2>
@@ -273,7 +207,6 @@ window.location.assign(res.url);
             inputMode="tel"
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
-            onBlur={conferirCupomComTelefone}
             className="carrinho-input"
             placeholder="(83) 99999-9999"
             maxLength={20}
