@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { brl } from "@/lib/format";
+import { MAX_POR_ITEM } from "@/lib/limites";
+
 
 type V = { id: string; tamanho: string; cor: string; estoque: number };
 
