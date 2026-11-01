@@ -34,7 +34,7 @@ export default function Carrinho() {
   );
 
   const faltaEndereco = entrega === "ENTREGA" && endereco.trim().length < 8;
-  const faltaTelefone = telefone.replace(/\D/g, "").length < 10;
+  const faltaTelefone = normalizarTelefone(telefone) === null;
 
   const chave = items.map((i) => i.variantId).join(",");
 
