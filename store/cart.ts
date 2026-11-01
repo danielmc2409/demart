@@ -1,6 +1,7 @@
 // store/cart.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { MAX_POR_ITEM } from "@/lib/limites";
 
 type Item = { variantId: string; qtd: number };
 
@@ -21,7 +22,9 @@ export const useCart = create<CartState>()(
           return {
             items: found
               ? s.items.map((i) =>
-                  i.variantId === variantId ? { ...i, qtd: i.qtd + 1 } : i
+                  i.variantId === variantId
+                    ? { ...i, qtd: Math.min(i.qtd + 1, MAX_POR_ITEM) }
+                    : i
                 )
               : [...s.items, { variantId, qtd: 1 }],
           };
@@ -32,7 +35,9 @@ export const useCart = create<CartState>()(
             qtd <= 0
               ? s.items.filter((i) => i.variantId !== variantId)
               : s.items.map((i) =>
-                  i.variantId === variantId ? { ...i, qtd } : i
+                  i.variantId === variantId
+                    ? { ...i, qtd: Math.min(qtd, MAX_POR_ITEM) }
+                    : i
                 ),
         })),
       clear: () => set({ items: [] }),
