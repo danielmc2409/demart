@@ -8,6 +8,8 @@ import { Prisma } from "@/generated/prisma/client";
 import { brl } from "@/lib/format";
 import { validarCupom } from "@/lib/cupom";
 import { normalizarTelefone } from "@/lib/telefone";
+import { MAX_POR_ITEM } from "@/lib/limites";
+
 
 const gerarCodigo = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -44,7 +46,11 @@ const schema = z
       .array(
         z.object({
           variantId: z.string(),
-          qtd: z.number().int().min(1).max(20),
+                    qtd: z
+            .number()
+            .int()
+            .min(1, "Quantidade inválida")
+            .max(MAX_POR_ITEM, `Máximo de ${MAX_POR_ITEM} unidades por item`),
         })
       )
       .min(1, "Carrinho vazio")
