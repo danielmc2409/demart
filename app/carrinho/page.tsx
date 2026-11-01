@@ -5,15 +5,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/store/cart";
 import { brl } from "@/lib/format";
+import { MAX_POR_ITEM } from "@/lib/limites";
 import { getCartDetails } from "@/app/actions/get-cart-details";
 import { createOrder } from "@/app/actions/create-order";
 import CupomInput, { CupomAplicado } from "./cupom-input";
 import { normalizarTelefone } from "@/lib/telefone";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
-
-// mesmo limite por item aplicado no servidor (create-order.ts)
-const MAX_POR_ITEM = 20;
 
 export default function Carrinho() {
   const { items, setQtd } = useCart();
@@ -89,7 +87,9 @@ useEffect(() => {
   const desconto = cupom?.descontoCentavos ?? 0;
   const total = subtotal - desconto;
 
-  const excedeu = linhas.some((l) => l.item.qtd > l.d.estoque);
+  const excedeu = linhas.some(
+    (l) => l.item.qtd > Math.min(l.d.estoque, MAX_POR_ITEM)
+  );
 
   async function finalizar() {
     if (excedeu || enviando) return;
@@ -189,8 +189,16 @@ window.location.assign(res.url);
                     ? "Item esgotado. Remova-o do carrinho."
                     : `Só temos ${d.estoque} em estoque. Diminua a quantidade.`}
                 </p>
-              ) : item.qtd === d.estoque ? (
-                <p className="aviso-max">Quantidade máxima disponível</p>
+              ) : item.qtd > MAX_POR_ITEM ? (
+                <p className="carrinho-erro">
+                  {`Máximo de ${MAX_POR_ITEM} unidades por item. Diminua a quantidade.`}
+                </p>
+              ) : item.qtd === Math.min(d.estoque, MAX_POR_ITEM) ? (
+                <p className="aviso-max">
+                  {d.estoque > MAX_POR_ITEM
+                    ? `Máximo de ${MAX_POR_ITEM} unidades por pedido`
+                    : "Quantidade máxima disponível"}
+                </p>
               ) : null}
             </div>
 
