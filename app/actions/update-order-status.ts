@@ -25,7 +25,7 @@ export async function updateOrderStatus(formData: FormData) {
         include: { items: true },
       });
 
-      // pedido cancelado é final (estoque e cupom já foram devolvidos)
+      // pedido cancelado é final (o estoque já foi devolvido)
       if (!order || order.status === status || order.status === "CANCELADO")
         return;
 
@@ -35,7 +35,7 @@ export async function updateOrderStatus(formData: FormData) {
       }
 
       // trava contra duplo cancelamento (dois cliques / dois admins):
-      // só quem conseguir mudar o status devolve estoque e cupom
+      // só quem conseguir mudar o status devolve o estoque
       const { count } = await tx.order.updateMany({
         where: { id, status: { not: "CANCELADO" } },
         data: { status: "CANCELADO" },
@@ -48,27 +48,6 @@ export async function updateOrderStatus(formData: FormData) {
           where: { id: i.variantId },
           data: { estoque: { increment: i.qtd } },
         });
-      }
-
-      // devolve o cupom: libera o telefone e desconta o uso
-      // (pedidos antigos sem telefone gravado não têm CupomUso, então não mexe)
-      if (order.cupomCodigo && order.clienteTelefone) {
-        const cupom = await tx.cupom.findUnique({
-          where: { codigo: order.cupomCodigo },
-        });
-
-        if (cupom) {
-          const removidos = await tx.cupomUso.deleteMany({
-            where: { cupomId: cupom.id, telefone: order.clienteTelefone },
-          });
-
-          if (removidos.count > 0 && cupom.usos > 0) {
-            await tx.cupom.update({
-              where: { id: cupom.id },
-              data: { usos: { decrement: 1 } },
-            });
-          }
-        }
       }
     },
     { maxWait: 10_000, timeout: 20_000 }
