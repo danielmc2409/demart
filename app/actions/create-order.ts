@@ -70,7 +70,7 @@ export async function createOrder(input: unknown): Promise<Result> {
   }
   const { nome, telefone, entrega, endereco, pagamento, itens, cupom } =
     parsed.data;
-  const tel = normalizarTelefone(telefone);
+    const tel = normalizarTelefone(telefone)!; // já validado no schema
 
   try {
     const order = await prisma.$transaction(
