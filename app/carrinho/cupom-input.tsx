@@ -6,10 +6,12 @@ export type CupomAplicado = { codigo: string; descontoCentavos: number };
 
 export default function CupomInput({
   subtotalCentavos,
+  telefone,
   aplicado,
   aoAplicar,
 }: {
   subtotalCentavos: number;
+  telefone?: string; // só vai quando já está válido; o servidor confere se já usou
   aplicado: CupomAplicado | null;
   aoAplicar: (c: CupomAplicado | null) => void;
 }) {
@@ -24,7 +26,7 @@ export default function CupomInput({
       const res = await fetch("/api/cupom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo, subtotalCentavos }),
+        body: JSON.stringify({ codigo, subtotalCentavos, telefone }),
       });
       const dados = await res.json();
       if (dados.ok) {
