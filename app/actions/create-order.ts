@@ -23,11 +23,12 @@ class ErroNegocio extends Error {}
 const schema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome").max(80),
-    telefone: z
+        telefone: z
       .string()
       .trim()
+      .max(30, "Telefone muito longo")
       .refine(
-        (v) => v.replace(/\D/g, "").length >= 10,
+        (v) => normalizarTelefone(v) !== null,
         "Informe um telefone válido com DDD"
       ),
     entrega: z.enum(["RETIRADA", "ENTREGA"]),
