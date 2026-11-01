@@ -63,11 +63,6 @@ export default async function Admin() {
               </div>
               <div className="text-right">
                 <p className="font-semibold">{brl(p.totalCentavos)}</p>
-                {p.cupomCodigo && (
-                  <p className="text-sm text-green-700">
-                    {p.cupomCodigo} (− {brl(p.descontoCentavos)})
-                  </p>
-                )}
                 <p className="text-sm">{p.status}</p>
               </div>
             </div>
