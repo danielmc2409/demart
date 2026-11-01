@@ -198,7 +198,8 @@ export async function createOrder(input: unknown): Promise<Result> {
       url: `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`,
     };
   } catch (e) {
-    if (e instanceof ErroNegocio) return { ok: false, erro: e.message };
+    if (e instanceof ErroNegocio)
+  return { ok: false, erro: e.message, cupom: e.cupom };
 
     // corrida: duas requisições tentando usar o mesmo cupom com o mesmo telefone
     if (
