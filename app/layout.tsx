@@ -34,17 +34,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-       <div className="top-bar">
-  <div className="top-bar-track">
-    {[0, 1].map((n) => (
-      <div className="top-bar-grupo" key={n} aria-hidden={n === 1}>
-        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
-        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
-        <span>CUPOM PRIMEIRA COMPRA - BEMVINDO10</span>
-      </div>
-    ))}
-  </div>
-</div>
         <header className="head">
           <Link href="/">
             <img src="/img/logo.png" alt="Demart" className="logo" />
