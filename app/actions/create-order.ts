@@ -207,7 +207,7 @@ export async function createOrder(input: unknown): Promise<Result> {
       e instanceof Prisma.PrismaClientKnownRequestError &&
       e.code === "P2002"
     ) {
-      return { ok: false, erro: "Você já usou este cupom." };
+      return { ok: false, erro: "Você já usou este cupom.", cupom: true };
     }
 
     // erro inesperado: registra no servidor, não mostra detalhes ao cliente
