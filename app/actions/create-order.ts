@@ -62,7 +62,7 @@ const schema = z
 
 type Result =
   | { ok: true; codigo: string; url: string }
-  | { ok: false; erro: string };
+  | { ok: false; erro: string; cupom?: boolean };
 
 export async function createOrder(input: unknown): Promise<Result> {
   // confere a configuração ANTES de mexer em estoque ou cupom
