@@ -7,7 +7,7 @@ import {updateProduct, setEstoque, addVariant} from "@/app/actions/product-admin
 import { deleteVariant } from "@/app/actions/delete-variant";
 import { ConfirmButton } from "@/app/admin/confirm-button";
 import { brl } from "@/lib/format";
-
+import FotosInput from "../../fotos-imput";
 export default async function EditarProduto({
   params,
   searchParams,
@@ -67,10 +67,7 @@ export default async function EditarProduto({
             Remover preço riscado (hoje: de {brl(p.precoAntigoCentavos)} por {brl(p.precoCentavos)})
           </label>
         )}
-        <label className="block text-sm font-medium">
-          Imagens (uma URL por linha)
-          <textarea name="imagens" rows={3} defaultValue={p.imagens.join("\n")} className={campo} />
-        </label>
+             <FotosInput inicial={p.imagens} />
 
         {erro && <p className="text-sm text-red-600">{erro}</p>}
         {ok && <p className="text-sm text-green-700">Salvo ✓</p>}

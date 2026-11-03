@@ -91,6 +91,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <p>{LOJA.endereco}</p>
             {LOJA.desenvolvidoPor && <p>Desenvolvido por {LOJA.desenvolvidoPor}</p>}
           </div>
+          <a href="/lgpd">Política de Privacidade</a>
         </footer>
         <a
           href={whats}

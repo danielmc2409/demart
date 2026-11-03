@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
 import { normalizarTelefone } from "@/lib/telefone";
 import { MAX_POR_ITEM } from "@/lib/limites";
+import { PONTOS_RETIRADA } from "@/lib/loja";
 
 const gerarCodigo = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -22,17 +23,11 @@ class ErroNegocio extends Error {}
 const schema = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome").max(80),
-    telefone: z
-      .string()
-      .trim()
-      .max(30, "Telefone muito longo")
-      .refine(
-        (v) => normalizarTelefone(v) !== null,
-        "Informe um telefone válido com DDD"
-      ),
     entrega: z.enum(["RETIRADA", "ENTREGA"]),
     endereco: z.string().trim().max(200).optional(),
     pagamento: z.enum(["PIX", "CARTAO", "DINHEIRO"]),
+
+        retirada: z.string().trim().max(40).optional(),
     itens: z
       .array(
         z.object({
@@ -55,6 +50,17 @@ const schema = z
         message: "Informe o endereço de entrega",
       });
     }
+
+        if (
+      v.entrega === "RETIRADA" &&
+      !PONTOS_RETIRADA.some((p) => p.id === v.retirada)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["retirada"],
+        message: "Escolha o local de retirada",
+      });
+    }
   });
 
 type Result =
@@ -70,9 +76,9 @@ export async function createOrder(input: unknown): Promise<Result> {
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0].message };
   }
-  const { nome, telefone, entrega, endereco, pagamento, itens } = parsed.data;
-  const tel = normalizarTelefone(telefone)!; // já validado no schema
-
+  const { nome, retirada, entrega, endereco, pagamento, itens } = parsed.data;
+ // já validado no schema
+  const pontoRetirada = PONTOS_RETIRADA.find((p) => p.id === retirada);
   try {
     const order = await prisma.$transaction(
       async (tx) => {
@@ -114,9 +120,9 @@ export async function createOrder(input: unknown): Promise<Result> {
           data: {
             codigo: gerarCodigo(),
             clienteNome: nome,
-            clienteTelefone: tel,
             entrega,
-            endereco: entrega === "ENTREGA" ? endereco : null,
+                       endereco: entrega === "ENTREGA" ? endereco : (pontoRetirada?.endereco ?? null),
+            
             pagamento,
             totalCentavos: total,
             items: { create: orderItems },
@@ -142,9 +148,8 @@ export async function createOrder(input: unknown): Promise<Result> {
       "",
       order.entrega === "ENTREGA"
         ? `Entrega no endereço: ${order.endereco}`
-        : "Retirada na loja",
+        : `Retirada em: ${order.endereco ?? "loja"}`,
       `Pagamento: ${ROTULO_PAGAMENTO[order.pagamento]}`,
-      `Telefone: ${order.clienteTelefone}`,
     ].join("\n");
 
     return {

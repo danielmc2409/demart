@@ -1,7 +1,7 @@
 // app/admin/produtos/novo/page.tsx
 import { requireAdmin } from "@/lib/auth";
 import { createProduct } from "@/app/actions/product-admin";
-
+import FotosInput from "../../fotos-imput";
 export default async function Novo({
   searchParams,
 }: {
@@ -35,10 +35,7 @@ export default async function Novo({
             <input name="categoria" required placeholder="camisetas" className={campo} />
           </label>
         </div>
-        <label className="block text-sm font-medium">
-          Imagens (uma URL por linha)
-          <textarea name="imagens" rows={3} className={campo} placeholder="https://..." />
-        </label>
+               <FotosInput />
         <label className="block text-sm font-medium">
           Variantes (uma por linha: tamanho,cor,estoque)
           <textarea

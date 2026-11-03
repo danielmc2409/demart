@@ -9,3 +9,10 @@ export const LOJA = {
   horario: "",
   desenvolvidoPor: "", // deixe vazio para não mostrar
 };
+
+
+// Locais de retirada. Para ter mais de um, é só adicionar outro item na lista.
+export const PONTOS_RETIRADA = [
+  { id: "loja", endereco: "Rua Severino Bronzeado, 84, Centro, Remígio \n Seg. Sex das 8h às 17h" },
+
+];

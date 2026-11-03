@@ -735,6 +735,7 @@ img {
 
 /* ---------- Carrinho / checkout ---------- */
 .carrinho {
+    text-align: center;
   width: 100%;
   max-width: 42rem;
   margin: 0 auto;
@@ -743,6 +744,7 @@ img {
 .carrinho-msg { padding: 2.5rem 1rem; text-align: center; color: var(--muted); }
 .carrinho-titulo {
   margin: 0 0 1.5rem;
+  text-align: center;
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -758,6 +760,7 @@ img {
   gap: 0.75rem;
 }
 .carrinho-item {
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -829,6 +832,39 @@ img {
   border-color: var(--slate-800);
   box-shadow: 0 0 0 3px rgba(38, 53, 64, 0.15);
 }
+
+.retirada-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.retirada-opcao {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.retirada-opcao.ativa {
+  border-color: var(--slate-800);
+  background: var(--sand-soft);
+}
+.retirada-opcao input {
+  margin-top: 3px;
+  accent-color: var(--slate-800);
+}
+.endereco-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 0 12px;
+}
+.endereco-todas { grid-column: 1 / -1; }
 .carrinho-finalizar {
   display: block;
   width: 100%;
@@ -985,3 +1021,23 @@ img {
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
 }
 .whats-flutuante img { width: 100%; height: 100%; object-fit: contain; }
+
+.lgpd{
+  justify-content: center;
+  text-align: center;
+maxWidth: 700;
+margin: "0 auto";
+padding: 24 
+}
+
+.lgpd h1{
+font-weight: bold;
+
+}
+
+.lgpd p{
+  margin-bottom: 40px;
+}
+.retirada-opcao span {
+  white-space: pre-line;
+}

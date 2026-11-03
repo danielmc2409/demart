@@ -9,6 +9,7 @@ import { MAX_POR_ITEM } from "@/lib/limites";
 import { getCartDetails } from "@/app/actions/get-cart-details";
 import { createOrder } from "@/app/actions/create-order";
 import { normalizarTelefone } from "@/lib/telefone";
+import { PONTOS_RETIRADA } from "@/lib/loja";
 
 type Detalhe = Awaited<ReturnType<typeof getCartDetails>>[number];
 
@@ -17,19 +18,26 @@ export default function Carrinho() {
   const [detalhes, setDetalhes] = useState<Detalhe[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
   const [entrega, setEntrega] = useState<"RETIRADA" | "ENTREGA">("RETIRADA");
-  const [endereco, setEndereco] = useState("");
+   const [rua, setRua] = useState("");
+  const [numero, setNumero] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [complemento, setComplemento] = useState("");
   const [pagamento, setPagamento] = useState<"PIX" | "CARTAO" | "DINHEIRO">(
     "PIX"
   );
+    const [retirada, setRetirada] = useState<string | null>(PONTOS_RETIRADA.length === 1 ? PONTOS_RETIRADA[0].id : null)
 
-  const faltaEndereco = entrega === "ENTREGA" && endereco.trim().length < 8;
-  const faltaTelefone = normalizarTelefone(telefone) === null;
-
+    // junta os campos num único texto: "Rua X, 123 - Bairro Y (complemento)"
+  const endereco =
+    `${rua.trim()}, ${numero.trim()} - ${bairro.trim()}` +
+    (complemento.trim() ? ` (${complemento.trim()})` : "");
+  const faltaEndereco =
+    entrega === "ENTREGA" &&
+    (rua.trim().length < 3 || numero.trim().length < 1 || bairro.trim().length < 2);
   const chave = items.map((i) => i.variantId).join(",");
 
 useEffect(() => {
@@ -89,9 +97,9 @@ useEffect(() => {
       // envia só o que está visível na tela
       const res = await createOrder({
         nome,
-        telefone,
         entrega,
         endereco: entrega === "ENTREGA" ? endereco : undefined,
+                retirada: entrega === "RETIRADA" ? (retirada ?? undefined) : undefined,
         pagamento,
         itens: linhas.map((l) => ({
           variantId: l.item.variantId,
@@ -200,19 +208,6 @@ window.location.assign(res.url);
           />
         </label>
 
-        <label className="carrinho-label">
-          Seu WhatsApp
-          <input
-            type="tel"
-            inputMode="tel"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            className="carrinho-input"
-            placeholder="(83) 99999-9999"
-            maxLength={20}
-          />
-        </label>
-
         <fieldset className="checkout-grupo">
           <legend>Como quer receber?</legend>
           <div className="checkout-opcoes">
@@ -238,21 +233,74 @@ window.location.assign(res.url);
             ))}
           </div>
         </fieldset>
-
-        {entrega === "ENTREGA" && (
-          <label className="carrinho-label">
-            Endereço de entrega
-            <textarea
-              value={endereco}
-              onChange={(e) => setEndereco(e.target.value)}
-              className="carrinho-input"
-              rows={3}
-              maxLength={200}
-              placeholder="Rua, número, bairro, complemento ou ponto de referência"
-            />
-          </label>
+        {entrega === "RETIRADA" && (
+          <div className="retirada-lista">
+            {PONTOS_RETIRADA.map((p) => (
+              <label
+                key={p.id}
+                className={`retirada-opcao ${retirada === p.id ? "ativa" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={retirada === p.id}
+                  onChange={() => setRetirada(retirada === p.id ? null : p.id)}
+                />
+                <span>
+                  Retirar em: <strong>{p.endereco}</strong>
+                </span>
+              </label>
+            ))}
+          </div>
         )}
+              {entrega === "ENTREGA" && (
+          <div className="endereco-grid">
+            <label className="carrinho-label endereco-todas">
+              Rua
+              <input
+                value={rua}
+                onChange={(e) => setRua(e.target.value)}
+                className="carrinho-input"
+                maxLength={70}
+                autoComplete="address-line1"
+                placeholder="Nome da rua"
+              />
+            </label>
 
+            <label className="carrinho-label">
+              Número
+              <input
+                value={numero}
+                onChange={(e) => setNumero(e.target.value)}
+                className="carrinho-input"
+                maxLength={10}
+                placeholder="123"
+              />
+            </label>
+
+            <label className="carrinho-label">
+              Bairro
+              <input
+                value={bairro}
+                onChange={(e) => setBairro(e.target.value)}
+                className="carrinho-input"
+                maxLength={40}
+                autoComplete="address-level3"
+                placeholder="Bairro"
+              />
+            </label>
+
+            <label className="carrinho-label endereco-todas">
+              Complemento ou ponto de referência (opcional)
+              <input
+                value={complemento}
+                onChange={(e) => setComplemento(e.target.value)}
+                className="carrinho-input"
+                maxLength={50}
+                placeholder="Ex.: casa azul, perto da padaria"
+              />
+            </label>
+          </div>
+        )}
         <fieldset className="checkout-grupo">
           <legend>Forma de pagamento</legend>
           <div className="checkout-opcoes">
@@ -290,7 +338,6 @@ window.location.assign(res.url);
           enviando ||
           excedeu ||
           nome.trim().length < 2 ||
-          faltaTelefone ||
           faltaEndereco
         }
         className="carrinho-finalizar"
