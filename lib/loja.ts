@@ -4,7 +4,7 @@ export const LOJA = {
   instagramUrl: "https://instagram.com/demart.modamasculina",
   instagramUser: "@demart.modamasculina",
   razaoSocial: "DEMART", // ou seu nome, se for MEI
-  documento: "",
+  documento: "-",
   endereco: "",
   horario: "",
   desenvolvidoPor: "", // deixe vazio para não mostrar
