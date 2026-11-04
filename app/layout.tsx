@@ -18,11 +18,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: { default: "Demart", template: "%s | Demart" },
-  description: "Roupas com atendimento pelo WhatsApp",
-  openGraph: { type: "website", locale: "pt_BR", siteName: "Demart" },
+  title: { default: "Demart | Moda Masculina", template: "%s | Demart" },
+  description: "Moda masculina com atendimento pelo WhatsApp. Retirada ou entrega em Remígio-PB.",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Demart",
+    title: "Demart | Moda Masculina",
+    description: "Moda masculina com atendimento pelo WhatsApp.",
+  },
 };
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   const whats = `https://wa.me/${process.env.WHATSAPP_NUMBER}?text=${encodeURIComponent(
     "Olá! Tenho uma dúvida."
@@ -91,7 +96,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <p>{LOJA.endereco}</p>
             {LOJA.desenvolvidoPor && <p>Desenvolvido por {LOJA.desenvolvidoPor}</p>}
           </div>
-          <a href="/lgpd">Política de Privacidade</a>
+          <div className="troca"> <a href="/trocas">Trocas e Devoluções</a>
+          <a href="/lgpd">Política de Privacidade</a></div>
+         
+          
         </footer>
         <a
           href={whats}
