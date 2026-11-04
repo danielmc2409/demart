@@ -40,7 +40,7 @@ export default async function Home() {
       <section className="banner-secao">
         <picture>
           <source media="(max-width: 768px)" srcSet="/img/banner-mobile.webp" />
-          <img src="/img/banner.png" alt="Demart - Moda Masculina" className="banner" />
+          <img src="/img/banner-1.wepb" alt="Demart - Moda Masculina" className="banner" />
         </picture>
 
         <div className="beneficios">
