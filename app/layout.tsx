@@ -41,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <header className="head">
           <Link href="/">
-            <img src="/img/logo.png" alt="Demart" className="logo" />
+            <img src="/img/logo.webp" alt="Demart" className="logo" />
           </Link>
           <CartLink />
         </header>

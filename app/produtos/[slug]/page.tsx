@@ -9,7 +9,7 @@ import AddToCart from "./add-to-cart";
 import Galeria from "./galeria";
 import Compartilhar from "./compartilhar";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 // cache: a página e o generateMetadata usam a mesma consulta (1 ida ao banco)
 const buscarProduto = cache((slug: string) =>

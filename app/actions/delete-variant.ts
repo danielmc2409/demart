@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { revalidarLoja } from "@/lib/revalidar-loja";
 
 export async function deleteVariant(formData: FormData) {
   await requireAdmin();
@@ -25,5 +26,5 @@ export async function deleteVariant(formData: FormData) {
   }
 
   revalidatePath(`/admin/produtos/${productId}`);
-  revalidatePath("/");
+  revalidarLoja();
 }

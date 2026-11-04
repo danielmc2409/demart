@@ -113,3 +113,11 @@ model CupomUso {
 
   @@unique([cupomId, telefone])
 }
+
+model Tentativa {
+  id       String   @id @default(cuid())
+  chave    String
+  criadoEm DateTime @default(now())
+
+  @@index([chave, criadoEm])
+}

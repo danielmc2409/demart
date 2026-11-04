@@ -5,9 +5,15 @@ import { z } from "zod";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
-import { normalizarTelefone } from "@/lib/telefone";
 import { MAX_POR_ITEM } from "@/lib/limites";
 import { PONTOS_RETIRADA } from "@/lib/loja";
+import { revalidarLoja } from "@/lib/revalidar-loja";
+import { chaveDoCliente, excedeu, registrar } from "@/lib/limite";
+import { cancelarPendentesAntigos } from "@/lib/pedidos";
+
+// no máximo 5 pedidos por visitante a cada 15 minutos
+const MAX_PEDIDOS = 5;
+const JANELA_SEG = 15 * 60;
 
 const gerarCodigo = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -26,8 +32,7 @@ const schema = z
     entrega: z.enum(["RETIRADA", "ENTREGA"]),
     endereco: z.string().trim().max(200).optional(),
     pagamento: z.enum(["PIX", "CARTAO", "DINHEIRO"]),
-
-        retirada: z.string().trim().max(40).optional(),
+    retirada: z.string().trim().max(40).optional(),
     itens: z
       .array(
         z.object({
@@ -51,7 +56,7 @@ const schema = z
       });
     }
 
-        if (
+    if (
       v.entrega === "RETIRADA" &&
       !PONTOS_RETIRADA.some((p) => p.id === v.retirada)
     ) {
@@ -77,8 +82,25 @@ export async function createOrder(input: unknown): Promise<Result> {
     return { ok: false, erro: parsed.error.issues[0].message };
   }
   const { nome, retirada, entrega, endereco, pagamento, itens } = parsed.data;
- // já validado no schema
+
+  // limite por visitante (contra pedidos falsos que seguram o estoque)
+  const chave = await chaveDoCliente("pedido");
+  if (chave) {
+    if (await excedeu(chave, MAX_PEDIDOS, JANELA_SEG)) {
+      return {
+        ok: false,
+        erro: "Muitos pedidos em pouco tempo. Aguarde alguns minutos e tente novamente.",
+      };
+    }
+    await registrar(chave);
+  }
+
+  // devolve o estoque de pedidos pendentes antigos antes de conferir
+  await cancelarPendentesAntigos();
+
+  // já validado no schema
   const pontoRetirada = PONTOS_RETIRADA.find((p) => p.id === retirada);
+
   try {
     const order = await prisma.$transaction(
       async (tx) => {
@@ -121,8 +143,10 @@ export async function createOrder(input: unknown): Promise<Result> {
             codigo: gerarCodigo(),
             clienteNome: nome,
             entrega,
-                       endereco: entrega === "ENTREGA" ? endereco : (pontoRetirada?.endereco ?? null),
-            
+            endereco:
+              entrega === "ENTREGA"
+                ? endereco
+                : (pontoRetirada?.endereco ?? null),
             pagamento,
             totalCentavos: total,
             items: { create: orderItems },
@@ -133,6 +157,9 @@ export async function createOrder(input: unknown): Promise<Result> {
       // padrão é 5 s; com o Neon "acordando" pode estourar
       { maxWait: 10_000, timeout: 20_000 }
     );
+
+    // o estoque mudou: atualiza a home e as páginas de produto
+    revalidarLoja();
 
     const linhas = order.items.map(
       (i) =>

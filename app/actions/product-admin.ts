@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { slugify, parsePreco } from "@/lib/slug";
+import { revalidarLoja } from "@/lib/revalidar-loja";
 
 const LINHAS = /\r?\n/;
 
@@ -81,9 +82,10 @@ export async function createProduct(fd: FormData) {
     },
   });
 
-  revalidatePath("/");
+  revalidarLoja();
   redirect(`/admin/produtos/${criado.id}`);
 }
+
 export async function updateProduct(fd: FormData) {
   await requireAdmin();
   const id = String(fd.get("id"));
@@ -105,13 +107,12 @@ export async function updateProduct(fd: FormData) {
   else if (novo > atual.precoCentavos) precoAntigoCentavos = null;
   if (fd.get("removerAntigo")) precoAntigoCentavos = null;
 
-  const p = await prisma.product.update({
+  await prisma.product.update({
     where: { id },
     data: { ...base.dados!, precoAntigoCentavos },
   });
 
-  revalidatePath("/");
-  revalidatePath(`/produtos/${p.slug}`);
+  revalidarLoja();
   redirect(`/admin/produtos/${id}?ok=1`);
 }
 
@@ -121,7 +122,7 @@ export async function toggleAtivo(fd: FormData) {
   const p = await prisma.product.findUnique({ where: { id } });
   if (!p) return;
   await prisma.product.update({ where: { id }, data: { ativo: !p.ativo } });
-  revalidatePath("/");
+  revalidarLoja();
   revalidatePath("/admin/produtos");
 }
 
@@ -133,6 +134,7 @@ export async function setEstoque(fd: FormData) {
     where: { id: String(fd.get("variantId")) },
     data: { estoque },
   });
+  revalidarLoja();
   revalidatePath("/admin/produtos");
 }
 
@@ -149,6 +151,6 @@ export async function addVariant(fd: FormData) {
     update: { estoque },
     create: { productId, tamanho, cor, estoque },
   });
+  revalidarLoja();
   revalidatePath(`/admin/produtos/${productId}`);
 }
-// updateProduct, toggleAtivo, setEstoque e addVariant: sem alterações

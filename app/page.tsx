@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { brl } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; 
 
 const icone = {
   width: 22,
@@ -39,8 +39,8 @@ export default async function Home() {
     <main>
       <section className="banner-secao">
         <picture>
-          <source media="(max-width: 768px)" srcSet="/img/banner-mobile.png" />
-          <img src="/img/banner.png" alt="Demart - Moda Masculina" className="banner" />
+          <source media="(max-width: 768px)" srcSet="/img/banner-mobile.webp" />
+          <img src="/img/banner.webp" alt="Demart - Moda Masculina" className="banner" />
         </picture>
 
         <div className="beneficios">

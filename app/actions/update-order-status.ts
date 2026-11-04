@@ -5,6 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { revalidarLoja } from "@/lib/revalidar-loja";
 
 const schema = z.object({
   id: z.string(),
@@ -53,5 +54,6 @@ export async function updateOrderStatus(formData: FormData) {
     { maxWait: 10_000, timeout: 20_000 }
   );
 
+  revalidarLoja();
   revalidatePath("/admin");
 }
